@@ -26,3 +26,13 @@
 \BOOKMARK [3][-]{section*.7}{Multi-dimensional Operations}{subsection.3.2}% 26
 \BOOKMARK [3][-]{section*.8}{Aggregation}{subsection.3.2}% 27
 \BOOKMARK [2][-]{subsection.3.3}{Schema Creation and Updates}{section.3}% 28
+\BOOKMARK [1][-]{section.4}{Implementation of the MD Model}{}% 29
+\BOOKMARK [2][-]{subsection.4.1}{Relational Storage}{section.4}% 30
+\BOOKMARK [3][-]{section*.9}{Snowflake Schema}{subsection.4.1}% 31
+\BOOKMARK [3][-]{section*.10}{Star Schema}{subsection.4.1}% 32
+\BOOKMARK [2][-]{subsection.4.2}{MD Queries}{section.4}% 33
+\BOOKMARK [3][-]{section*.11}{Grouping Sets}{subsection.4.2}% 34
+\BOOKMARK [3][-]{section*.12}{Rollup}{subsection.4.2}% 35
+\BOOKMARK [3][-]{section*.13}{Cube}{subsection.4.2}% 36
+\BOOKMARK [3][-]{section*.14}{Other useful functions}{subsection.4.2}% 37
+\BOOKMARK [3][-]{section*.15}{The OVER Clause}{subsection.4.2}% 38

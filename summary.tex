@@ -8,6 +8,9 @@
 \renewcommand{\familydefault}{\sfdefault}
 \usepackage[a4paper]{geometry}
 
+\usepackage{listings}
+\lstset{language=SQL}
+
 \usepackage{tcolorbox}
 \newtcolorbox{keypointbox}
 {
@@ -394,4 +397,113 @@ The schema can also evolve, with most of it staying the same as the old version.
 \textbf{This is dangerous territory.}
 
 \section{Implementation of the MD Model}
+We need to find a way of storing our MD model.
+We could use a classical relational database, which would be very scalable, but we would have to transform all queries into relational form.
+
+Alternatively we could create a multi-dimensional database, which would have easier querying, but would scale very badly due to empty cells.
+
+We could also combine both approaches, giving us a tradeoff between the two.
+
+\subsection{Relational Storage}
+This requires three layers: an RDBMS (relational DBMS), storing the data and performing the queries, an OLAP server transforming the OLAP operations into SQL, and a presentation layer, which the user interacts with.
+
+The problem is we have to find a suitable storage method while keeping the cardinality and consistent performance over all dimensions.
+As a start, we define every cube cell via a single tuple.
+This tuple contains the measure data and references to the dimension data.
+There are multiple ways of storing the dimension data.
+
+\subsubsection{Snowflake Schema}
+The snowflake schema stores dimensional data in a tree of references.
+An example is shown in \Cref{fig:snowflake}.
+This schema is fully normalized, and has thus no memory overhead.
+However, queries require joins over a lot of tables, making them slow (some DBMS optimizations can help here).
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{snowflake.png}
+    \caption{An example of a snowflake schema (the 7 is a page number)}
+    \label{fig:snowflake}
+\end{figure}
+
+\subsubsection{Star Schema}
+The star schema is basically a snowflake schema that is not normalized.
+The data in the dimension tables is potentially very redundant, which can lead to increased memory consumption.
+The joins in the query are faster (because there are fewer) with the star schema.
+An example is shown in \Cref{fig:star}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{star.png}
+    \caption{An example of the star schema}
+    \label{fig:star}
+\end{figure}
+
+\begin{keypointbox}
+    If multiple cubes are necessary, just reuse and combine parts you already have.
+    This leads to a galaxy representation
+\end{keypointbox}
+
+\subsection{MD Queries}
+A common pattern is the star join pattern.
+You simply join the fact table with the dimension table through the indices stored in the fact table.
+Because grouping along multiple dimensions is a frequent use-case in DWs, modern DBMSs have special methods for that.
+I will explain them in the order that I found easiest to understand.
+All of this can be done with simple group by clauses and unions, but that is an absolute nightmare for larger numbers of tables, and should be avoided where possible.
+
+\subsubsection{Grouping Sets}
+A grouping set is used in the \lstinline{GROUP BY} clause of a query.
+It is a set of sets defining the different groupings.
+\Cref{fig:groupingset} shows a very good example of how they work (for anyone interested it was taken from the postgresql manual on grouping sets).
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{groupingset.png}
+    \caption{An example of grouping sets}
+    \label{fig:groupingset}
+\end{figure}
+
+\begin{keypointbox}
+    A grouping set of $((a),(b,c),())$ will aggregate over rows with the same value in column $a$, then over all rows with identical $b$ and $c$ columns, and then over all.
+    It will display all results in the same table.
+\end{keypointbox}
+
+\subsubsection{Rollup}
+A rollup of $(a,b,c)$ is equivalent to a grouping set of $((a,b,c), (a,b), (a), ())$.
+The rollup operator always adds the aggregate over all rows.
+If this is not desired, the row should be filtered.
+
+\subsubsection{Cube}
+The cube operator calculates the power set of the supplied column set, and uses that as a grouping set.
+For example, a cube of $(a,b,c)$ becomes a grouping set of $(a,b,c), (a,b), (a,c), (b,c), (a), (b), (c), ()$.
+
+\begin{keypointbox}
+    A \lstinline{ROLLUP} performs a rollup along a single dimension, a \lstinline{CUBE} does so along all combinations of dimensions.
+\end{keypointbox}
+
+\subsubsection{Other useful functions}
+The \lstinline{GROUPING()} function tells us whether a given column was aggregated, and if multiple columns are supplied, it tells us the aggregations in a bitmask fashion.
+
+There also usually exist nicer functions for handling date data-types.
+
+\subsubsection{The \lstinline{OVER} Clause}
+This clause allows us to include aggregations with the unaggregated data.
+\Cref{fig:over} shows an example.
+\lstinline{OVER} can also be used for window functions.
+This is actually very well explained in the POSTGRES documentation, and a very nice example is shown in \Cref{fig:window}.
+Window functions can also be used for ranking with the \lstinline{RANK()} and \lstinline{DENSE_RANK()} functions.
+
+\begin{figure}[hp]
+    \centering
+    \includegraphics[width=\textwidth]{over.png}
+    \caption{An example of the \lstinline{OVER} clause}
+    \label{fig:over}
+\end{figure}
+
+\begin{figure}[hp]
+    \centering
+    \includegraphics[width=\textwidth]{window.png}
+    \caption{Using \lstinline{OVER} for sliding window computation}
+    \label{fig:window}
+\end{figure}
+
 \end{document}
