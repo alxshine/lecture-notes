@@ -506,4 +506,132 @@ Window functions can also be used for ranking with the \lstinline{RANK()} and \l
     \label{fig:window}
 \end{figure}
 
+\section{Versioning}
+Versioning can be very important in DWS systems.
+For organizational or legal reasons, deleting entries can sometimes not be an option.
+In those cases we need to add some measure of declaring a tuple invalid.
+
+There are in general four methods of versioning:
+\begin{itemize}
+    \item Overwriting old values
+    \item Adding a version number
+    \item Tuple timestamps
+    \item Attribute timestamps
+\end{itemize}
+Where overwriting old values leeds to data loss and is thus sometimes unacceptable.
+
+Attribute timestamping adds a start and end validity date to every attribute (leading to non-first-normal-form tables), while timestamping saves a start and end date for every tuple.
+Because we need the beginning and end time of both validity and the transaction, we need a total of four additional columns per timestamped attribute or tuple.
+Adding timestamps to tuples can lead to significant memory overhead due to the redundant saving of unchanging tuple parts.
+
+\subsection{Schema Updates}
+Sometimes changes to the schema become necessary.
+These are \textbf{a lot harder} to handle than instance updates, because they could force us to remodel the entire DW.
+The two main methods of handling them are schema versioning and schema evolution.
+For schema evolution old queries are still possible, but for a new schema this might not be the case.
+The steps necessary for adapting a schema to certain changes are shown in \Cref{fig:changes}.
+
+\begin{figure}[hp]
+    \centering
+    \includegraphics[width=\textwidth]{changes.png}
+    \caption{Necessary steps for schema updates}
+    \label{fig:changes}
+\end{figure}
+
+\section{Multi-dimensional Storage}
+The best abstract model for storing things in MD fashion is a cube.
+However, we do not only consider a three-dimensional cube, but an $n$ dimensional hypercube.
+For visualization purposes we can reduce it to three dimensions, and our operations will work on other dimensions just the same.
+We now need two (different) data structures for the dimensions (for addressing) and for the cube itself.
+
+\subsection{Dimensions}
+Abstractly viewed, a dimension is an ordered list of values (along that dimension).
+These values have a fixed domain.
+By ordering the dimension values we can create a mapping from dimension value to index and vice versa.
+If we know all dimension values of a cell, we can then calculate its position in memory.
+The order of the dimensions can be chosen arbitrarily and is fixed after setup of the data cube.
+It has far reaching consequences concerning queries on the cube.
+
+There are multiple ways for storing complex records in cubes:
+\begin{itemize}
+    \item \textbf{Complex cells:} These store the entire tuple of measures in the cell designated by the dimension values
+    \item \textbf{Multiple cubes with flat cells:} Create one cube per measure ("Multi-Cube" approach)
+    \item \textbf{Measure dimension:} Push (some) measures into the dimensions, requires all measures to be of the same data type
+\end{itemize}
+
+While single cube approaches are easier to understand, they can create large memory overhead because of large areas (volumes) in the cube with NULL values.
+Multi-cube approaches limit this memory consumption, but require joins for data consolidation.
+
+\subsection{Classification Hierachies and Aggregations}
+An optimization approach is to store both the dimension values and all nodes of higher classification levels in the cube.
+This means that all cells in a certain category are aggregated (for example during updates) and this aggregation is also stored in the cube, reducing the query time for future aggregations.
+Such aggregations can also be done only for parts of the cube.
+
+Unfortunately, this increases the size of the cube, which may or may not be an issue.
+For small cubes it is better to just calculate these aggrgations at query time, while for larger cubes this can become vital.
+Storing aggregations only for some hierarchy levels (e.g. every second) can create an optimal middle ground between both approaches.
+
+\subsection{Partial and Virtual Cubes}
+Query results for all queries on a cube are also cubes, thus allowing the same optimizations and techniques.
+Also, views created on the cube are themselves (virtual) cubes and allow for the same processing as real cubes.
+
+\subsection{Storing MD-data in MD-arrays}
+A more direct approach to saving MD-data is saving them in arrays.
+For any amount of dimensions we need to linearize the data for storage.
+This makes storage very compact, compared to tables.
+A large part of the performance stems from the order the dimensions are linearized in.
+\Cref{fig:linearization} shows an example of such a linearization.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{linearization.png}
+    \caption{An example of MD-array linearization}
+    \label{fig:linearization}
+\end{figure}
+
+Calculating the index based on the dimension values is then very simple and follows the formula:
+\begin{equation}
+    I = \sum_{i=1}^n v_i \prod_{j=2}^i |D_{j-1}|
+\end{equation}
+So for three dimensions we get $I = v_1 + v_2 \cdot |D_1| + v_3 \cdot |D_1| \cdot |D_2|$.
+Index calculation can be sped up using the Horner Schema.
+
+\subsubsection{Sparse vs Dense Population}
+The filling level is given by the number of filled cells, divided by the number of total cells.
+Dense population is given when the filling level is high, sparse population is given when it is low.
+For dense populations, array storage is more efficient than relational storage.
+For sparse populations, we can make some adjustments to the array saving method to greatly increase storage efficiency.
+
+One method is to not store empty areas in sparsely populated arrays.
+If the empty cells would occupy an entire memory block, you can just skip it.
+This requires additional calculations for indices.
+
+There is also the possibility of storing sparsely populated dimensions on another level than densely populated ones.
+
+\subsubsection{Limitations of MD-Storage}
+MD-storage methods do have some limitations.
+It can be expensive to maintain the full MD-array (due to null-values), and not saving NULL areas makes it more like a relational approach.
+Inserting new values can cause \textbf{a lot} of memory shifting in order to keep the order on indices consistent.
+There is also no current standard for MD-storage, as opposed to SQL, and all query languages are proprietary.
+
+\subsection{Target Figures}
+Target figures can be difficult to store in MD-arrays, as they are only known in spares quality (e.g. only per store per month), and need to be filled in later.
+We would however still be able to calculate with them in aggregations (e.g. prognosing yearly totals for the running year).
+This requires the DW to maintain the target figures itself, often with (goal) tracking.
+The target figures can also be stored along with actual measures in the cube cells.
+
+\subsection{Access Control}
+Access control is a tricky issue for OLAP systems, as we want to generate accurate reports without the user obtaining specific information he or she should not usually access.
+A user can also obtain specific cell values by using tracker queries and set algebra.
+An example of a tracker query is shown in \Cref{fig:tracker}.
+Most systems only have a simple rights system which does not protect against tracker queries.
+A possible countermeasure would be to recognize tracker queries and forbid the user from accessing the results.
+This could however disrupt the workflow and make generating all desired reports impossible, due to queries resembling tracker queries by chance.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{tracker.png}
+    \caption{An example of tracker queries}
+    \label{fig:tracker}
+\end{figure}
 \end{document}

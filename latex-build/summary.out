@@ -36,3 +36,14 @@
 \BOOKMARK [3][-]{section*.13}{Cube}{subsection.4.2}% 36
 \BOOKMARK [3][-]{section*.14}{Other useful functions}{subsection.4.2}% 37
 \BOOKMARK [3][-]{section*.15}{The OVER Clause}{subsection.4.2}% 38
+\BOOKMARK [1][-]{section.5}{Versioning}{}% 39
+\BOOKMARK [2][-]{subsection.5.1}{Schema Updates}{section.5}% 40
+\BOOKMARK [1][-]{section.6}{Multi-dimensional Storage}{}% 41
+\BOOKMARK [2][-]{subsection.6.1}{Dimensions}{section.6}% 42
+\BOOKMARK [2][-]{subsection.6.2}{Classification Hierachies and Aggregations}{section.6}% 43
+\BOOKMARK [2][-]{subsection.6.3}{Partial and Virtual Cubes}{section.6}% 44
+\BOOKMARK [2][-]{subsection.6.4}{Storing MD-data in MD-arrays}{section.6}% 45
+\BOOKMARK [3][-]{section*.16}{Sparse vs Dense Population}{subsection.6.4}% 46
+\BOOKMARK [3][-]{section*.17}{Limitations of MD-Storage}{subsection.6.4}% 47
+\BOOKMARK [2][-]{subsection.6.5}{Target Figures}{section.6}% 48
+\BOOKMARK [2][-]{subsection.6.6}{Access Control}{section.6}% 49
