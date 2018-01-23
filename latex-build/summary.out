@@ -56,3 +56,19 @@
 \BOOKMARK [3][-]{section*.20}{Algorithms for R-trees}{subsection.7.3}% 56
 \BOOKMARK [2][-]{subsection.7.4}{R+-trees}{section.7}% 57
 \BOOKMARK [2][-]{subsection.7.5}{R*-trees}{section.7}% 58
+\BOOKMARK [3][-]{section*.26}{Insertion}{subsection.7.5}% 59
+\BOOKMARK [3][-]{section*.27}{Splitting}{subsection.7.5}% 60
+\BOOKMARK [3][-]{section*.28}{Forced Reinsert}{subsection.7.5}% 61
+\BOOKMARK [2][-]{subsection.7.6}{UB-trees}{section.7}% 62
+\BOOKMARK [3][-]{section*.29}{Z-Ordering}{subsection.7.6}% 63
+\BOOKMARK [3][-]{section*.31}{Insertion}{subsection.7.6}% 64
+\BOOKMARK [3][-]{section*.32}{Range queries}{subsection.7.6}% 65
+\BOOKMARK [3][-]{section*.33}{Tetris algorithm}{subsection.7.6}% 66
+\BOOKMARK [2][-]{subsection.7.7}{Bitmap Indices}{section.7}% 67
+\BOOKMARK [3][-]{section*.34}{Multicomponent Bitmap Indices}{subsection.7.7}% 68
+\BOOKMARK [3][-]{section*.35}{Range-coded Bitmap Indices}{subsection.7.7}% 69
+\BOOKMARK [3][-]{section*.36}{Interval-coded Bitmap Indices}{subsection.7.7}% 70
+\BOOKMARK [2][-]{subsection.7.8}{Partitioning}{section.7}% 71
+\BOOKMARK [3][-]{section*.37}{Horizontal Partitioning}{subsection.7.8}% 72
+\BOOKMARK [3][-]{section*.40}{Vertical Partitioning}{subsection.7.8}% 73
+\BOOKMARK [1][-]{section.8}{Star Join Optimizations}{}% 74

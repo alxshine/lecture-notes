@@ -777,5 +777,158 @@ This is somewhat balanced by the reduced query time, but the query time can also
 \end{figure}
 
 \subsection{R*-trees}
+By doing some optimizations with the insert and split algorithms we can get performance comparable to the R\textsuperscript{+}-tree without the redundant saving.
+We want to minimize the area of the bounding rectangles and the overlap and circumference of search space rectangles.
+
+\subsubsection{Insertion}
+While inserting we calculate the candidate nodes for the new element based on the area increase.
+This is done for every pathing decision during the downwards traversal of the tree.
+This increases the complexity of the insertion somewhat, but gives us much better query performance.
+
+\subsubsection{Splitting}
+First the best axis for splitting along is chosen.
+This is done by sorting all elements by their highest and lowest border in all directions.
+These sorted lists are then split in the middle, and the sum of circumferences of the resulting bounding rectangles is calculated.
+The axis with the lowest circumference is chosen.
+
+Along the chosen axis, all distributions are tested, and the distribution which results in minimal overlap is chosen.
+
+\subsubsection{Forced Reinsert}
+In order to still achieve good search space organization independent of insertion order, there exists the possibility of performing a reinsert on node split.
+All this does is choose a number of (random) elements after the node split and reinsert them.
+Because these nodes might be inserted in different parts of the tree, potential new splits might arise.
+
+\subsection{UB-trees}
+UB-trees were designed to cluster tuples on disk space while preserving close proximity.
+They provide efficient incremental organization (they work fast after updates) and give logarithmic worst-case guarantees for insertion, deletion and point queries.
+Range queries are also handled efficiently, and memory utilization is good on average.
+
+\subsubsection{Z-Ordering}
+Z-ordering is a way of ordering tuples in memory.
+The Z-index is calculated as follows:
+\begin{equation}
+    Z(x) = \sum_{i=0}^{s-1} \sum_{j=1}^d x_{j,i} \cdot 2^{i \cdot d + j -1}
+\end{equation}
+The meaning of the variables is not really explained anywhere in the slides, and I personally believe that Z-ordering is much better understandable if it is shown as in \Cref{fig:z-order}.
+They are basically just fractal Zs, if that makes sense.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.8\textwidth]{z-order.png}
+    \caption{Four Z-curves with different granularity}
+    \label{fig:z-order}
+\end{figure}
+
+\paragraph{Z-regions} are regions in Z ordering given by a start and end index.
+They can be interpreted both as "linear" intervals on the Z-curve or as geometrical regions in the multidimensional plane.
+\Cref{fig:z-region} shows the different interpretations.
+Because there exist efficient conversions between Z-order and tuple values and vice versa (bit interleaving) we can arbitrarily switch between both interpretations of Z-regions.
+
+We can represent memory pages with Z-regions, and can thus quickly calculate which memory pages are relevant for a range or point query.
+The rightmost image in \Cref{fig:z-region} shows a possible point entry distribution for the Z-regions of the middle image with a memory page capacity of two entries per page.
+The Z-regions of a UB tree are stored in a B-tree, and can thus efficiently be found.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.9\textwidth]{z-region.png}
+    \caption{Different interpretations of Z-regions}
+    \label{fig:z-region}
+\end{figure}
+
+\subsubsection{Insertion}
+By calculating the Z-index of a tuple upon inserting we can quickly find the memory page (Z-region) it belongs to.
+If there is no space left on the memory page for the new entry the Z-region has to be split.
+
+\subsubsection{Range queries}
+We calculate the bounding box of the search box in Z-space.
+Then we find all intersecting Z-regions, load the tuples from them and select the ones within the search box.
+
+\subsubsection{Tetris algorithm}
+In order to improve memory requirements for range queries (and a few other performance improvements) the Tetris order and algorithm were introduced.
+
+The elements and Z-regions are traversed in vertical or horizontal slices in geometrical space.
+This reduces the worst case memory requirements for the search to linear in the size of the result set, not the entire database.
+
+Z-regions are added until a full slice is cached, then the required elements are added to the result set.
+All Z-regions that do not pass over into a slice that has not been processed are then removed from the cache, and the next slice is processed.
+
+\subsection{Bitmap Indices}
+As tree structures degenerate with an increasing number of dimension, people have looked for alternative datastructures.
+One idea has been to use dimensions of low cardinality (ideally booleans) as a bitmap.
+This gives us a bitmap vector for every column, and filtering upon these vectors is easy.
+
+Encoding dimensions of higher cardinality is quite difficult however.
+For example, to encode the month of birth we need twelve bits for a bitmap instead of four for a regular integer.
+For the day of birth (from 0 to 365) we would need $365/8 = 46$ byte of memory \textbf{per tuple}.
+This can become too much very quickly.
+
+Also, because bitmaps are non-clustering index structures the time to access all filtered tuples can be quite large.
+This makes bitmaps better for small result sets.
+Updating them is also inefficient, but this is acceptable for DWs, as updates are not frequent.
+
+\subsubsection{Multicomponent Bitmap Indices}
+To reduce the problems arising from this, one can encode values of higher cardinality using their binary representation.
+This reduces the memory requirement from linear to logarithmic in the cardinality.
+Using this method has the drawback that most indices still have to be accessed in order to get the result set.
+Any other encoding than binary can also be used, but binary is used in the internal representation anyway.
+
+\subsubsection{Range-coded Bitmap Indices}
+Setting the bitmap value to 1 not only if the value matches, but if the value is less than or equal (or the other way round) than a certain (fixed) threshold makes bitmap indices better for range queries.
+The tradeoff here is that we either lose match query performance or incur additional memory overhead.
+
+Range-coded bitmap indices can be combined with multicomponent indices.
+
+\subsubsection{Interval-coded Bitmap Indices}
+By encoding whether or not a value is in a certain interval range queries can be accelerated as well.
+
+\subsection{Partitioning}
+Partitioning can work like an index structure, and it can be combined with index structures.
+It is the process of splitting a relation into autonomous sub-relations.
+All sub-relations combined form the master relation.
+Relations can be partitioned either horizontally or vertically.
+Both strategies are shown in \Cref{fig:partitioning}.
+
+\begin{figure}[hp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{partition.png}
+    \caption{Partitioning strategies}
+    \label{fig:partitioning}
+\end{figure}
+
+\subsubsection{Horizontal Partitioning}
+A relation is split into a set of pairwise disjunct set of sub-tables.
+Attributes for all sub-tables are the same.
+The two ways of doing horizontal partitioning are range based and hash based.
+
+\paragraph{Range based partitioning} is commonly done as it is very easy.
+The rows are split into sub-tables based on their values for certain attributes (e.g. all washing mashines).
+Tailoring the splitting criteria to the frequency of queries gives the highest performance boost.
+If, for example, half of my queries are concerned with the sales in Austria only, it makes sense to move all values for Austria to their own sub-table.
+Because values are \textbf{actually physically moved} during partitioning, this greatly increases the query time due to now given proximity in memory.
+A typical partitioning criterium is time, as normally newer values are more interesting.
+
+\paragraph{Hash based partitioning} partitioning based on the hash of a value or a combination of values balances the load, due to the nature of (good) hash functions.
+This technique is seldom used as random tuples will be grouped together, which usually results in bad query performance.
+It can be useful if most queries are aggrigates over all data, but even then partitioning based on some other attribute is better because it is more intuitive.
+
+\subsubsection{Vertical Partitioning}
+Storing certaing columns separately can have benefits for queries.
+This is especially true if some attributes are queried very seldom, or very often, or there attributes that are usually not queried together.
+
+The sub-tables store the primary key, and have a 1:1 relation to each other.
+Combining them requires a join.
+
+Splitting off attributes that are very rarely required can lead to the creation of mini-dimensions, leading to a reduced dimension table size.
+
+\section{Star Join Optimizations}
+As the star join required for classical star or snowflake schema DWs is very inefficient when using regular join techniques, some optimizations have been made.
+
+One solution is calculating the cross product over the dimension tables, as these are relatively small.
+This then requires only one big join with the fact table.
+Using the cross product technique can get out of hand quickly for slightly larger dimension tables (e.g. three dimensions with 1.000 rows each gives 1.000.000.000 tuples).
+
+Another technique is to first find the foreign keys that are required for the current query.
+This is done with the dimension tables directly.
+The fact table is only joined with the filtered result, leading to much smaller joins.
 
 \end{document}
