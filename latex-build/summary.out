@@ -47,3 +47,12 @@
 \BOOKMARK [3][-]{section*.17}{Limitations of MD-Storage}{subsection.6.4}% 47
 \BOOKMARK [2][-]{subsection.6.5}{Target Figures}{section.6}% 48
 \BOOKMARK [2][-]{subsection.6.6}{Access Control}{section.6}% 49
+\BOOKMARK [1][-]{section.7}{Index Structures for the MD data model}{}% 50
+\BOOKMARK [2][-]{subsection.7.1}{B-trees}{section.7}% 51
+\BOOKMARK [3][-]{section*.18}{B*-trees}{subsection.7.1}% 52
+\BOOKMARK [3][-]{section*.19}{Problems with B-trees}{subsection.7.1}% 53
+\BOOKMARK [2][-]{subsection.7.2}{Grid-Files}{section.7}% 54
+\BOOKMARK [2][-]{subsection.7.3}{R-trees}{section.7}% 55
+\BOOKMARK [3][-]{section*.20}{Algorithms for R-trees}{subsection.7.3}% 56
+\BOOKMARK [2][-]{subsection.7.4}{R+-trees}{section.7}% 57
+\BOOKMARK [2][-]{subsection.7.5}{R*-trees}{section.7}% 58

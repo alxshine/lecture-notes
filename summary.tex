@@ -609,6 +609,7 @@ This requires additional calculations for indices.
 There is also the possibility of storing sparsely populated dimensions on another level than densely populated ones.
 
 \subsubsection{Limitations of MD-Storage}
+\label{limitations}
 MD-storage methods do have some limitations.
 It can be expensive to maintain the full MD-array (due to null-values), and not saving NULL areas makes it more like a relational approach.
 Inserting new values can cause \textbf{a lot} of memory shifting in order to keep the order on indices consistent.
@@ -634,4 +635,147 @@ This could however disrupt the workflow and make generating all desired reports 
     \caption{An example of tracker queries}
     \label{fig:tracker}
 \end{figure}
+
+\section{Index Structures for the MD data model}
+As covered briefly in \Cref{limitations}, we want our data structure to support certain operations efficiently.
+Because we cannot move the \textbf{entire} DW on inserts (and for other performance reasons), we cannot use native MD-arrays as storage method.
+As relational storage methods have become the norm, and with that highly optimized, they are also used for DWs.
+In order to use them efficiently for DW queries (range queries, aggregations, ...), we need to do some optimization on the index structure.
+
+We want to store our data in a way, such that data which is in close proximity to each other in \textbf{any} dimension is in close proximity in memory.
+This greatly reduces the number of disk accesses we need for range queries, as it increases the likelihood of tuples being on the same memory block.
+As memory controllers access one memory page at a time anyway, having more tuples on the same page decreases query time.
+
+Index structures can be classified as follows:
+\begin{itemize}
+    \item \textbf{Clustering:} Clustering index structures keep neighboring tuples in close proximity in memory.
+        We can further distinguish between tuple clustering (tuples are clustered on a memory page) and page clustering (pages are stored in tuple order).
+        Page clustering is very expensive, as it requires page reordering; however, it allows for prefetching in queries.
+        In non-clustering index structures the tuples are stored in random order.
+    \item \textbf{Dimensionality:} States the number of attributes of the underlying relation used for calculating the index key.
+    \item \textbf{Symmetry:} In symmetrical index structures the order of index attributes is not relevant for performance of the index structure.
+    \item \textbf{Dynamic Behaviour:} The cost of updating the index structur on dynamic changes.
+\end{itemize}
+
+The following subsections will cover the index structures.
+I will not go into too much detail, but will rather provide a refresher.
+Most of the index structures are actually very intuitive, and most of them are very well explained by wikipedia.
+
+\subsection{B-trees}
+B-trees are used in regular OLTP databases.
+They provide a method for generating a \textbf{guaranteed balanced tree} with low depth.
+Insertion in B-trees is fairly simple.
+You add the new element where it would belong (by order of its primary key), and if the node is full, you split it, moving the middle element to the parent node.
+If there is no parent node, you create one.
+An example is shown in \Cref{fig:b_tree}.
+
+Deleting from a B-tree is done by removing the elemnt from its containing node.
+If the node is now too empty, we combine it with one of the neighboring siblings.
+This might cause a split and a reorganization of the index structure, which makes deleting from B-trees tedious.
+Luckily, this is a non-issue in DWs, as we never really delete anything.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{B_tree_insertion_example.png}
+    \caption{An example of insertion into a B-tree}
+    \label{fig:b_tree}
+\end{figure}
+
+\subsubsection{B*-trees}
+In order to achieve greater in order traversal speed, we push the elements all into the leaves, with the internal nodes only acting as organizers.
+If we now store a reference to the next (and previous) leaf node in every leaf, we can get very high in order traversal speed.
+
+\subsubsection{Problems with B-trees}
+B-trees can only work with a single index.
+Even when combining multiple dimension values into a single index like in MD-arrays, we can only efficiently traverse them in a single dimension.
+B-trees are \textbf{asymmetrical}.
+
+\subsection{Grid-Files}
+Grid files are essentially a grid of references to buckets.
+The dimensions of the (n-dimensional) grid represent the domain of the dimension values in our DW.
+After calculating the position of the element in the grid via the dimension values, the element is stored in the bucket referenced at the target location.
+Because the buckets are limited in size, splitting might become necessary.
+This is done by splitting the grid row (or column or n-dimensional equivalent) into two halves, and creating a new bucket.
+All non-full buckets in the same row can stay as they were, as we can simply replicate the reference to them.
+This means that once we split a bucket in a row, all other buckets in the same row now have two references to them.
+Should one of them also become too full, we can create a second bucket without splitting the row again.
+If a bucket becomes empty we can simply combine it with the "neighboring" bucket, and store the same reference in two grid cells.
+
+Row splitting in grid files is an expensive operation, as all other references have to be moved in memory for the grid file to stay performant.
+Apart from this performance issue, they offer great clustering and symmetry properties.
+
+\subsection{R-trees}
+R-trees are optimized for elements that cannot be accurately represented as a single point.
+It is mainly used for geographical objects (in 2-D, 3-D or n-D), but can be used for arbitrary multidimension data.
+They work as follows:
+Each leaf node approximates its represented element via its bounding rectangle.
+Each intermediate node represents its children via their bounding rectangle.
+These bounding rectangles are generally not disjunct, and so traversing multiple paths through the tree might become necessary for queries.
+Each node contains between $m$ (lower bound) and $M$ (upper bound) elements.
+\Cref{fig:r-tree} shows an example of an R-tree and its 2-D representation.
+Because the branching in every level is at least $m$, the height of the tree is bound by the logarithm to base $m$.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{r-tree.png}
+    \caption{An example R-tree with $m=2$ and $M=3$}
+    \label{fig:r-tree}
+\end{figure}
+
+\subsubsection{Algorithms for R-trees}
+\paragraph{Searching} is done by traversing the tree and selecting path(s) whose bounding rectangles contain the search point.
+For range queries the same thing is done but with intersections with the search rectangle.
+
+\paragraph{Insertion} works almost the same way as in a B-tree.
+However, due to the potentially overlapping bounding rectangles, multiple candidates must be considered.
+The candidate which requires less increase in their bounding rectangle is chosen.
+Just like in B-trees, if a node is overfull, this causes a split.
+Splits are a bit more complex than in B-trees, and will be covered separately.
+
+\paragraph{Deletion} is done by simply removing the element from its containing node, and adjusting the bounding rectangle.
+If changes occur, they are propagated recursively upwards.
+Should an underflow happen we can combine sibling nodes.
+As opposed to B-trees, any siblings can be combined in R-trees.
+The combination with the smallest increase in bounding rectangle is chosen.
+
+\paragraph{Splitting} is a non-trivial problem, as finding the best way to split is expensive.
+There exists a quadratic algorithm which solves this.
+In the first step, all pairs of children are tested for their wastefulness, and the most wasteful pair is chosen as seeds for the new split nodes.
+(Wastefulness is calculated by the difference of the bounding rectangle area and the individual rectangle areas).
+This guarantees us a maximum distance between the seeds.
+Now we simply take a random other child and add it to the node where it causes the lesser bounding rectangle increase.
+
+There is also a heuristic linear cost algorithm, which works almost the same way but chooses the seeds differently.
+For each dimension, it records the normalized separation between the lowest high side and the highest low side.
+It then chooses the rectangles which have the highest separation along any dimension.
+The comparison is possible because the distances have been normalized (divided by the total length of the set along their respective dimension).
+
+A very good graphic example can be found on the slidedeck for chapter 5, on pages 49 to 70.
+
+\paragraph{Evaluation of the R-tree}
+R-trees are a dynamic, height-balanced structure which is suitable for storing large amounts of data.
+If the data is distributed "well", they can provide rapid access.
+Well in this case means distinct boinding rectangles.
+
+The rectangle approximation however can be rather imprecise, and the quality and speed of the search space is limited by the overlap of the rectangles.
+In the worst case the entire index space has to be searched.
+Update algorithms are also very costly, which makes R-trees not ideal for data which is highly dynamic.
+
+\subsection{R\textsuperscript{+}-trees}
+These trees solve the search space overlap problem by "clipping" the bounding rectangles.
+If an element is contained in both rectangles, it (or a reference to it) is stored redundantly.
+A graphical example is shown in \Cref{fig:r+-tree}. 
+The elements are logically "cut" on insertion.
+Due to the redundant storing of elements, additional memory overhead can be incurred.
+This is somewhat balanced by the reduced query time, but the query time can also be reduced in different ways.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{r+tree.png}
+    \caption{A graphical example for an R\textsuperscript{+}-tree}
+    \label{fig:r+-tree}
+\end{figure}
+
+\subsection{R*-trees}
+
 \end{document}
