@@ -33,6 +33,19 @@
 
 \begin{document}
 \maketitle
+
+\tableofcontents
+
+This is \textbf{my interpretation} of the lecture slides.
+I tried to be very verbose and explain everything, all while removing irrelevant parts from the lecture.
+Using this you should be able to pass the lecture easily.
+\large{\textbf{However, I do not take responsibility for any bad results and will not be blamed from anyone.
+This was a lot of work and I did it to save others (especially students of following semesters) from having to do this themselves.
+Use this summary at your own responsibility.}}
+If you have any feedback, feel free to create an issue on the \href{https://github.com/alxshine/lecture-notes}{git}.
+I don't promise I will fix anything, but I will try.
+\newpage
+
 \section{Definition}
 \textbf{GI-Group Definition:}
 “A Data Warehouse is a database which (from a technical point of view) integrates data from different (heterogeneous) data sources and (from an economic point of view) provides the user with this data for business analysis purposes. Frequently, but not necessarily, a historization of data takes place.”
@@ -930,5 +943,148 @@ Using the cross product technique can get out of hand quickly for slightly large
 Another technique is to first find the foreign keys that are required for the current query.
 This is done with the dimension tables directly.
 The fact table is only joined with the filtered result, leading to much smaller joins.
+
+\section{Materialized Views}
+Because most queries reference the same aggregations (e.g. sums of sales per month per store) it can become quicker to just store these results in memory.
+While this greatly decreases query time, it does require extra memory.
+Also, because the aggregated data is saved as a redundant copy, there might be some consistency issues on data changes.
+For DWs this should be a non-issue, as we usually don't have updates, but this should still be kept in mind.
+
+Another potential issue arises from the selection of materialized views.
+Selecting the optimal aggregations to store is a hard problem.
+Also not all parts of queries can be stored in materialized views.
+
+\subsection{Usage of Materialized Views}
+Materialized views are constructed by replacing parts of common queries with precalculated results.
+Should be done only in cases where fetching from the materialized view is substantially faster than calculating on the fly, and worth the memory usage.
+Also, if the existing views do not exactly match a branch of the operator tree, the query execution plan (QEP) has to be adjusted.
+This raises more questions about the cheapest solution.
+A general rule is avoiding accesses to the fact tables.
+
+\subsubsection{Monoblock Queries}
+Monoblock queries are regular star join queries (joining the fact table with the dimension tables).
+These can easily be replaced by materialized views.
+In general we replace the grouped selection from the fact table (joined with dimension tables) by a distinct selection from our materialized view.
+
+In general, a Query $Q$ can be represented by another query $Q'$ on a materialized view $M$ iff (if and only if):
+\begin{itemize}
+    \item Selection conditions on $M$ are not more restrictive than those on $Q$
+    \item Grouping Attributes for $Q$ have to be a subset of $M$
+    \item If $Q$ contains aggregation functions, they have to be combinable from the aggregation functions in $M$
+        \begin{itemize}
+            \item if $Q$ contains sum then $M$ must contain sum
+            \item if $Q$ contains average then $M$ contains either average or sum and count
+        \end{itemize}
+    \item Additional selection conditions in $Q$ must be applicable to $M$
+\end{itemize}
+
+\subsubsection{Multiblock Queries}
+We want to extend the previous technique to arbitrary queries and views, even if the restriction on $M$ is stricter than that on $Q$.
+This can be done by retrieving facts missing in $M$ from the fact table.
+In general, the way to do this is by splitting $Q$ into selection criteria contained in $M$ and not contained in $M$.
+We then perform a union of $M$ with the additional facts.
+Because retrieving the missing facts can be quite complex, based on the restrictions on $M$, including the materialized view at all can have a negative performance impact.
+
+\subsection{Additivity of Aggregation Functions}
+Informally, a function is semi-additive if it can be calculated from the results of some other aggregation function (e.g. the average can be calculated knowing the sum and count of subsets).
+If it can be calculated from results of itself, then it is additive.
+A few examples:
+\begin{itemize}
+    \item \textit{sum} is an additive function
+    \item \textit{average} is a semi-additive function
+    \item \textit{count} is a semi-additive function (the global count is the sum of the individual counts)
+    \item \textit{min} and \textit{max} are additive functions
+\end{itemize}
+
+\subsection{Selection of Materialized Views}
+Selecting the optimal set of materialized views is hard (NP-complete).
+The lecture slides describe multiple heuristics, as well as proposing static selection using intuition.
+This part does not seem to be too important for the lecture, as it is not contained in the summary at all.
+
+\subsection{Update of Materialized Views}
+Materialized views can either be regenerated (which is potentially costly), or updated incrementally (which requires the calculation of deltas).
+If the selction criteria of the update query are applicable to $M$ then the update on the fact table can simply be run on the materialized view as well.
+
+If Up-to-dateness is not a pressing issue the views can also just be regenerated over the weekend or during other downtime.
+
+\section{Data Mining}
+The basic idea of data mining is to discover "knowledge" from existing.
+This is mostly done by finding patterns in the sales data.
+
+Data mining is an iterative process consisting of the following steps:
+\begin{enumerate}
+    \item Selection of data from the data basis
+    \item Preprocessing: removing errors or incomplete values (this should be already done in a DW)
+    \item Transformation: decreasing quantity
+    \item Removing attributes rarely or never occuring
+    \item Transformation into an analytical data basis
+    \item Data Mining: the method used is defined by the goal
+    \item Interpretation and Verification
+\end{enumerate}
+
+\subsection{Data Mining Methods}
+\begin{itemize}
+    \item \textbf{Dependency Detection:} finding statistical dependencies in the data set via either association rules or probability networks
+    \item \textbf{Classification:} finding data points indicating a certain outcome (e.g. risk assessment for insurance companies)
+    \item \textbf{Clustering:} splitting the data set into clusters of related data points
+    \item \textbf{Sequence Analysis:} searching for frequently occuring episodes of events in time-ordered datasets
+    \item \textbf{Regression:} detection of cause-effect relations between data points
+    \item \textbf{Generalization:} generalizing new data points from an existing data set (e.g. interactive extrapolation)
+\end{itemize}
+
+\subsubsection{Clustering}
+Here only the k-means algorithm is covered.
+For k-means, $k$ data points are chosen as prototypes at random from the dataset.
+Then we iteratively add new data points to the cluster closest to them.
+We then move the prototypes to the mean of their respective cluster and repeat this until no data point is unclustered, all while minimizing the global distance of data points from their respective prototype.
+
+\subsubsection{Classification}
+In the lecture, only decision trees in the form of \textit{ID3} are covered.
+Decision trees work by calculating the observed probabilities and conditional probabilities of the classification variable $c$ based on other attributes.
+For decision trees, attributes of low cardinality are best, as the classification gets harder otherwise.
+The shown method works as follows, and is a general approach to decision trees:
+\begin{itemize}
+    \item Pick the attribute $a$ which gives us the highest \textit{information growth} (limits the vulue of $c$ the most)
+    \item Split the data set into (disjunct) sets of different values for $a$
+    \item Repeat
+    \item If no more attributes are left, add leaf nodes with the probability of $c$ for the current branch
+\end{itemize}
+If there is no $a$ that limits the value of $c$ significantly enough, there is the possibility of stopping short.
+Decision trees have a problem of overfitting, as they fit the classifier very strongly to the training set.
+
+\subsubsection{Association Rules}
+Oftentimes in data mining we want to find dependencies in our data set.
+This is used in many applications, e.g. recommending videos on YouTube or songs on Spotify.
+While it is impractical to test all combinations of transactions, we can test those that show a minimum support
+Association rules take the shape of $X \rightarrow Y$ and $X$ is the rule head, and $Y$ is the rule body.
+
+\paragraph{Support} is the ratio of transactions containing a certain item.
+Support for association rules is the number of transactions where the items of the rule occur together.
+This can also be seen as the probability of the association rule "showing" (occuring).
+\begin{equation}
+    Sup(X\rightarrow Y) = {P(X, Y)} = \frac{\#(T\textup{ with } X,Y)}{\#(\textup{All transactions})}
+\end{equation}
+
+\paragraph{Confidence} is the ratio of the support of the assoction rule over the support of the rule head.
+It can also be seen as the conditional probability of the rule given the rule head occurs.
+\begin{equation}
+    Conf(X\rightarrow Y) = \frac{P(X, Y)}{P(X)}
+\end{equation}
+
+\paragraph{Apriori Algorithm} works as follows:
+\begin{itemize}
+    \item Find all elements with support above a given threshold and add them to a set of association rules
+    \item Append every element to every rule head in the set
+    \item Remove the rules that are below a confidence or support threshold
+    \item Keep the rules, and add them to the set of rule heads
+    \item Repeat until the set of rule heads is empty
+\end{itemize}
+There exist more performant methods for finding association rules.
+Filtering based on support from the beginning can remove a lot of rules from our knowledge base, but it saves us from computing trivial rules and rules that are worthless because they rarely occur.
+
+\subsubsection{Summary}
+Data Mining is a powerful method of gathering business intelligence.
+The biggest problem of data mining is scalability, which is why many firms have specialized in running compute farms for data mining.
+Also a lot of data mining services exist.
 
 \end{document}

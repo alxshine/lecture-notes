@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2017.11.15)  23 JAN 2018 15:20
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2017.11.15)  24 JAN 2018 08:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -923,219 +923,223 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 36.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 36.
+ (latex-build/summary.toc
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 48.
+(Font)              <7> on input line 2.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 48.
- [1
+(Font)              <5> on input line 2.
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-LaTeX Font Info:    Try loading font information for OMS+cmss on input line 105
+[1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2])
+\tf@toc=\write7
+\openout7 = `summary.toc'.
+
+ [3] [4]
+LaTeX Font Info:    Try loading font information for OMS+cmss on input line 118
 .
-LaTeX Font Info:    No file OMScmss.fd. on input line 105.
+LaTeX Font Info:    No file OMScmss.fd. on input line 118.
 
 
 LaTeX Font Warning: Font shape `OMS/cmss/m/n' undefined
 (Font)              using `OMS/cmsy/m/n' instead
-(Font)              for symbol `textbullet' on input line 105.
+(Font)              for symbol `textbullet' on input line 118.
 
-[2] <images/control_flow.png, id=323, 716.6775pt x 776.9025pt>
+[5] <images/control_flow.png, id=477, 716.6775pt x 776.9025pt>
 File: images/control_flow.png Graphic file (type png)
 
 <use images/control_flow.png>
-Package pdftex.def Info: images/control_flow.png used on input line 131.
+Package pdftex.def Info: images/control_flow.png used on input line 144.
 (pdftex.def)             Requested size: 334.60422pt x 362.72589pt.
+ [6 <./images/control_flow.png>]
+
+LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <12> not available
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 156.
 
 
-LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <10> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 143.
-
-
-[3 <./images/control_flow.png>] [4]
-<images/transformation.png, id=336, 903.375pt x 503.8825pt>
+[7] [8] <images/transformation.png, id=497, 903.375pt x 503.8825pt>
 File: images/transformation.png Graphic file (type png)
 
 <use images/transformation.png>
-Package pdftex.def Info: images/transformation.png used on input line 217.
+Package pdftex.def Info: images/transformation.png used on input line 230.
 (pdftex.def)             Requested size: 334.60422pt x 186.6335pt.
- [5 <./images/transformation.png>] [6]
-<images/modeling.png, id=349, 1208.515pt x 634.37pt>
+ [9 <./images/transformation.png>] [10]
+<images/modeling.png, id=510, 1208.515pt x 634.37pt>
 File: images/modeling.png Graphic file (type png)
  <use images/modeling.png>
-Package pdftex.def Info: images/modeling.png used on input line 307.
+Package pdftex.def Info: images/modeling.png used on input line 320.
 (pdftex.def)             Requested size: 250.95476pt x 131.73096pt.
 
+[11]
+Overfull \hbox (22.76611pt too wide) in paragraph at lines 332--337
+\OT1/cmss/m/n/12 A clas-si-fi-ca-tion schema (of a di-men-sion) is a set $\OML/
+cmm/m/it/12 D$ \OT1/cmss/m/n/12 of clas-si-fi-ca-tion lev-els: $\OT1/cmr/m/n/12
+ (\OMS/cmss/m/n/12 f\OML/cmm/m/it/12 D[]; :::; D[]\OMS/cmss/m/n/12 g\OML/cmm/m/
+it/12 ; \OMS/cmss/m/n/12 !
+ []
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[7] <images/schema.png, id=376, 1270.7475pt x 756.8275pt>
+<images/schema.png, id=535, 1270.7475pt x 756.8275pt>
 File: images/schema.png Graphic file (type png)
-
-<use images/schema.png>
-Package pdftex.def Info: images/schema.png used on input line 327.
+ <use images/schema.png>
+Package pdftex.def Info: images/schema.png used on input line 340.
 (pdftex.def)             Requested size: 334.60422pt x 199.27647pt.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[8 <./images/modeling.png>] <images/cube.png, id=386, 1295.84125pt x 794.97pt>
+[12 <./images/modeling.png>]
+<images/cube.png, id=545, 1295.84125pt x 794.97pt>
 File: images/cube.png Graphic file (type png)
-
-<use images/cube.png>
-Package pdftex.def Info: images/cube.png used on input line 347.
+ <use images/cube.png>
+Package pdftex.def Info: images/cube.png used on input line 360.
 (pdftex.def)             Requested size: 334.60422pt x 205.26808pt.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[9 <./images/schema.png>] [10 <./images/cube.png>]
-<images/snowflake.png, id=401, 1041.8925pt x 617.30624pt>
+[13 <./images/schema.png>] [14 <./images/cube.png>]
+<images/snowflake.png, id=559, 1041.8925pt x 617.30624pt>
 File: images/snowflake.png Graphic file (type png)
 
 <use images/snowflake.png>
-Package pdftex.def Info: images/snowflake.png used on input line 423.
+Package pdftex.def Info: images/snowflake.png used on input line 436.
 (pdftex.def)             Requested size: 334.60422pt x 198.24847pt.
-
-<images/star.png, id=403, 777.90625pt x 444.66125pt>
-File: images/star.png Graphic file (type png)
- <use images/star.png>
-Package pdftex.def Info: images/star.png used on input line 436.
-(pdftex.def)             Requested size: 334.60422pt x 191.26845pt.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[11 <./images/snowflake.png>]
-<images/groupingset.png, id=411, 1121.18875pt x 439.6425pt>
+<images/star.png, id=561, 777.90625pt x 444.66125pt>
+File: images/star.png Graphic file (type png)
+ <use images/star.png>
+Package pdftex.def Info: images/star.png used on input line 449.
+(pdftex.def)             Requested size: 334.60422pt x 191.26845pt.
+
+[15] [16 <./images/snowflake.png> <./images/star.png>]
+<images/groupingset.png, id=575, 1121.18875pt x 439.6425pt>
 File: images/groupingset.png Graphic file (type png)
 
 <use images/groupingset.png>
-Package pdftex.def Info: images/groupingset.png used on input line 460.
+Package pdftex.def Info: images/groupingset.png used on input line 473.
 (pdftex.def)             Requested size: 418.25368pt x 164.00685pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[12 <./images/star.png>]
+ [17 <./images/groupingset.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\lstinline' on input line 488.
+(hyperref)                removing `\lstinline' on input line 501.
 
-<images/over.png, id=419, 1078.0275pt x 517.935pt>
+<images/over.png, id=583, 1078.0275pt x 517.935pt>
 File: images/over.png Graphic file (type png)
  <use images/over.png>
-Package pdftex.def Info: images/over.png used on input line 497.
+Package pdftex.def Info: images/over.png used on input line 510.
 (pdftex.def)             Requested size: 418.25368pt x 200.95062pt.
 
-<images/window.png, id=420, 1187.43625pt x 689.57625pt>
+<images/window.png, id=584, 1187.43625pt x 689.57625pt>
 File: images/window.png Graphic file (type png)
 
 <use images/window.png>
-Package pdftex.def Info: images/window.png used on input line 504.
+Package pdftex.def Info: images/window.png used on input line 517.
 (pdftex.def)             Requested size: 418.25368pt x 242.89153pt.
- [13 <./images/groupingset.png>] [14 <./images/over.png> <./images/window.png>]
- <images/changes.png, id=433, 1015.795pt x 636.3775pt>
+ [18 <./images/over.png>]
+<images/changes.png, id=593, 1015.795pt x 636.3775pt>
 File: images/changes.png Graphic file (type png)
-
-<use images/changes.png>
-Package pdftex.def Info: images/changes.png used on input line 536.
+ <use images/changes.png>
+Package pdftex.def Info: images/changes.png used on input line 549.
 (pdftex.def)             Requested size: 418.25368pt x 262.02344pt.
- [15 <./images/changes.png>]
-<images/linearization.png, id=440, 457.71pt x 302.12875pt>
+
+[19] [20 <./images/window.png> <./images/changes.png>]
+<images/linearization.png, id=605, 457.71pt x 302.12875pt>
 File: images/linearization.png Graphic file (type png)
 
 <use images/linearization.png>
-Package pdftex.def Info: images/linearization.png used on input line 587.
+Package pdftex.def Info: images/linearization.png used on input line 600.
 (pdftex.def)             Requested size: 167.2989pt x 110.43051pt.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[16] <images/tracker.png, id=450, 1050.92625pt x 262.9825pt>
+[21] [22 <./images/linearization.png>]
+<images/tracker.png, id=619, 1050.92625pt x 262.9825pt>
 File: images/tracker.png Graphic file (type png)
 
 <use images/tracker.png>
-Package pdftex.def Info: images/tracker.png used on input line 634.
+Package pdftex.def Info: images/tracker.png used on input line 647.
 (pdftex.def)             Requested size: 418.25368pt x 104.66144pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[17 <./images/linearization.png>] [18 <./images/tracker.png>]
-<images/B_tree_insertion_example.png, id=464, 180.675pt x 392.46625pt>
+ [23 <./images/tracker.png>]
+<images/B_tree_insertion_example.png, id=627, 180.675pt x 392.46625pt>
 File: images/B_tree_insertion_example.png Graphic file (type png)
 
 <use images/B_tree_insertion_example.png>
 Package pdftex.def Info: images/B_tree_insertion_example.png used on input line
- 679.
+ 692.
 (pdftex.def)             Requested size: 250.95476pt x 545.13722pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-<images/r-tree.png, id=466, 401.5pt x 344.28625pt>
-File: images/r-tree.png Graphic file (type png)
- <use images/r-tree.png>
-Package pdftex.def Info: images/r-tree.png used on input line 720.
-(pdftex.def)             Requested size: 418.25368pt x 358.6744pt.
+[24]
 
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[19]
-
-LaTeX Warning: Text page 20 contains only floats.
+LaTeX Warning: Text page 25 contains only floats.
 
 
 Overfull \vbox (3.55147pt too high) has occurred while \output is active []
 
 
-[20 <./images/B_tree_insertion_example.png>] [21 <./images/r-tree.png>]
+[25 <./images/B_tree_insertion_example.png>]
+<images/r-tree.png, id=639, 401.5pt x 344.28625pt>
+File: images/r-tree.png Graphic file (type png)
+ <use images/r-tree.png>
+Package pdftex.def Info: images/r-tree.png used on input line 733.
+(pdftex.def)             Requested size: 418.25368pt x 358.6744pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[26] [27 <./images/r-tree.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathsurround' on input line 764.
+(hyperref)                removing `\mathsurround' on input line 777.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\z@' on input line 764.
+(hyperref)                removing `\z@' on input line 777.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `superscript' on input line 764.
+(hyperref)                removing `superscript' on input line 777.
 
-<images/r+tree.png, id=488, 1098.1025pt x 512.91624pt>
+<images/r+tree.png, id=658, 1098.1025pt x 512.91624pt>
 File: images/r+tree.png Graphic file (type png)
  <use images/r+tree.png>
-Package pdftex.def Info: images/r+tree.png used on input line 774.
+Package pdftex.def Info: images/r+tree.png used on input line 787.
 (pdftex.def)             Requested size: 418.25368pt x 195.36414pt.
 
-[22 <./images/r+tree.png>] <images/z-order.png, id=497, 642.4pt x 642.4pt>
+[28 <./images/r+tree.png>] [29]
+<images/z-order.png, id=671, 642.4pt x 642.4pt>
 File: images/z-order.png Graphic file (type png)
-
-<use images/z-order.png>
-Package pdftex.def Info: images/z-order.png used on input line 817.
+ <use images/z-order.png>
+Package pdftex.def Info: images/z-order.png used on input line 830.
 (pdftex.def)             Requested size: 334.60422pt x 334.60866pt.
 
-<images/z-region.png, id=500, 961.5925pt x 482.80376pt>
+<images/z-region.png, id=674, 961.5925pt x 482.80376pt>
 File: images/z-region.png Graphic file (type png)
 
 <use images/z-region.png>
-Package pdftex.def Info: images/z-region.png used on input line 833.
+Package pdftex.def Info: images/z-region.png used on input line 846.
 (pdftex.def)             Requested size: 376.42575pt x 188.99994pt.
- [23] [24 <./images/z-order.png> <./images/z-region.png>] [25] <images/partitio
-n.png, id=520, 1270.7475pt x 646.415pt>
+ [30] [31 <./images/z-order.png> <./images/z-region.png>] <images/partition.png
+, id=689, 1270.7475pt x 646.415pt>
 File: images/partition.png Graphic file (type png)
 
 <use images/partition.png>
-Package pdftex.def Info: images/partition.png used on input line 893.
+Package pdftex.def Info: images/partition.png used on input line 906.
 (pdftex.def)             Requested size: 334.60422pt x 170.20432pt.
- [26 <./images/partition.png>] [27]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 934.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 934.
+ [32] [33] [34] [35] [36] [37] [38]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1090.
+ [39 <./images/partition.png>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1090.
+ (latex-build/summary.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1090.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1090.
 
-(latex-build/summary.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 934.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 934.
 Package rerunfilecheck Info: File `summary.out' has not changed.
 (rerunfilecheck)             Checksum: <no file>.
 
@@ -1144,30 +1148,31 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 18893 strings out of 494945
- 345027 string characters out of 6181031
- 426734 words of memory out of 5000000
- 21760 multiletter control sequences out of 15000+600000
- 9433 words of font info for 33 fonts, out of 8000000 for 9000
+ 18947 strings out of 494945
+ 345614 string characters out of 6181031
+ 427734 words of memory out of 5000000
+ 21773 multiletter control sequences out of 15000+600000
+ 9736 words of font info for 34 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 54i,10n,73p,832b,1214s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 54i,10n,73p,832b,1264s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/shar
-e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/f
-onts/type1/public/amsfonts/cm/cmss10.pfb></usr/share/texlive/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmss12.pfb></usr/share/texlive/texmf-dist/fonts/type1/p
-ublic/amsfonts/cm/cmss17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmss8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmssbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmssi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy
-10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
-
-Output written on latex-build/summary.pdf (27 pages, 1191325 bytes).
+e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmss10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmss12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmss17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/c
+mss8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10
+.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi12.pfb>
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/
+share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
+Output written on latex-build/summary.pdf (39 pages, 1236537 bytes).
 PDF statistics:
- 610 PDF objects out of 1000 (max. 8388607)
- 541 compressed objects within 6 object streams
- 154 named destinations out of 1000 (max. 500000)
- 700 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 832 PDF objects out of 1000 (max. 8388607)
+ 747 compressed objects within 8 object streams
+ 192 named destinations out of 1000 (max. 500000)
+ 804 words of extra memory for PDF output out of 10000 (max. 10000000)
 

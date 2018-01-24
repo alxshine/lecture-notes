@@ -9,33 +9,33 @@
 \BOOKMARK [2][-]{subsection.2.6}{Control Components}{section.2}% 9
 \BOOKMARK [2][-]{subsection.2.7}{Work Area}{section.2}% 10
 \BOOKMARK [2][-]{subsection.2.8}{ETL-Components}{section.2}% 11
-\BOOKMARK [3][-]{section*.1}{Extraction Component}{subsection.2.8}% 12
-\BOOKMARK [3][-]{section*.2}{Transformation Component}{subsection.2.8}% 13
-\BOOKMARK [3][-]{section*.3}{Loading Component}{subsection.2.8}% 14
+\BOOKMARK [3][-]{section*.2}{Extraction Component}{subsection.2.8}% 12
+\BOOKMARK [3][-]{section*.3}{Transformation Component}{subsection.2.8}% 13
+\BOOKMARK [3][-]{section*.4}{Loading Component}{subsection.2.8}% 14
 \BOOKMARK [2][-]{subsection.2.9}{Base Database}{section.2}% 15
 \BOOKMARK [2][-]{subsection.2.10}{Data Warehouse}{section.2}% 16
 \BOOKMARK [2][-]{subsection.2.11}{Data Marts}{section.2}% 17
 \BOOKMARK [2][-]{subsection.2.12}{Metadata Repository}{section.2}% 18
 \BOOKMARK [2][-]{subsection.2.13}{Analysis tools}{section.2}% 19
-\BOOKMARK [3][-]{section*.4}{OLAP systems}{subsection.2.13}% 20
+\BOOKMARK [3][-]{section*.5}{OLAP systems}{subsection.2.13}% 20
 \BOOKMARK [1][-]{section.3}{Multi-dimensional Data Modeling}{}% 21
 \BOOKMARK [2][-]{subsection.3.1}{Schemas and Instances}{section.3}% 22
 \BOOKMARK [2][-]{subsection.3.2}{Data cubes}{section.3}% 23
-\BOOKMARK [3][-]{section*.5}{Cube Schemas and Instances}{subsection.3.2}% 24
-\BOOKMARK [3][-]{section*.6}{Features of Measures}{subsection.3.2}% 25
-\BOOKMARK [3][-]{section*.7}{Multi-dimensional Operations}{subsection.3.2}% 26
-\BOOKMARK [3][-]{section*.8}{Aggregation}{subsection.3.2}% 27
+\BOOKMARK [3][-]{section*.6}{Cube Schemas and Instances}{subsection.3.2}% 24
+\BOOKMARK [3][-]{section*.7}{Features of Measures}{subsection.3.2}% 25
+\BOOKMARK [3][-]{section*.8}{Multi-dimensional Operations}{subsection.3.2}% 26
+\BOOKMARK [3][-]{section*.9}{Aggregation}{subsection.3.2}% 27
 \BOOKMARK [2][-]{subsection.3.3}{Schema Creation and Updates}{section.3}% 28
 \BOOKMARK [1][-]{section.4}{Implementation of the MD Model}{}% 29
 \BOOKMARK [2][-]{subsection.4.1}{Relational Storage}{section.4}% 30
-\BOOKMARK [3][-]{section*.9}{Snowflake Schema}{subsection.4.1}% 31
-\BOOKMARK [3][-]{section*.10}{Star Schema}{subsection.4.1}% 32
+\BOOKMARK [3][-]{section*.10}{Snowflake Schema}{subsection.4.1}% 31
+\BOOKMARK [3][-]{section*.11}{Star Schema}{subsection.4.1}% 32
 \BOOKMARK [2][-]{subsection.4.2}{MD Queries}{section.4}% 33
-\BOOKMARK [3][-]{section*.11}{Grouping Sets}{subsection.4.2}% 34
-\BOOKMARK [3][-]{section*.12}{Rollup}{subsection.4.2}% 35
-\BOOKMARK [3][-]{section*.13}{Cube}{subsection.4.2}% 36
-\BOOKMARK [3][-]{section*.14}{Other useful functions}{subsection.4.2}% 37
-\BOOKMARK [3][-]{section*.15}{The OVER Clause}{subsection.4.2}% 38
+\BOOKMARK [3][-]{section*.12}{Grouping Sets}{subsection.4.2}% 34
+\BOOKMARK [3][-]{section*.13}{Rollup}{subsection.4.2}% 35
+\BOOKMARK [3][-]{section*.14}{Cube}{subsection.4.2}% 36
+\BOOKMARK [3][-]{section*.15}{Other useful functions}{subsection.4.2}% 37
+\BOOKMARK [3][-]{section*.16}{The OVER Clause}{subsection.4.2}% 38
 \BOOKMARK [1][-]{section.5}{Versioning}{}% 39
 \BOOKMARK [2][-]{subsection.5.1}{Schema Updates}{section.5}% 40
 \BOOKMARK [1][-]{section.6}{Multi-dimensional Storage}{}% 41
@@ -43,32 +43,45 @@
 \BOOKMARK [2][-]{subsection.6.2}{Classification Hierachies and Aggregations}{section.6}% 43
 \BOOKMARK [2][-]{subsection.6.3}{Partial and Virtual Cubes}{section.6}% 44
 \BOOKMARK [2][-]{subsection.6.4}{Storing MD-data in MD-arrays}{section.6}% 45
-\BOOKMARK [3][-]{section*.16}{Sparse vs Dense Population}{subsection.6.4}% 46
-\BOOKMARK [3][-]{section*.17}{Limitations of MD-Storage}{subsection.6.4}% 47
+\BOOKMARK [3][-]{section*.17}{Sparse vs Dense Population}{subsection.6.4}% 46
+\BOOKMARK [3][-]{section*.18}{Limitations of MD-Storage}{subsection.6.4}% 47
 \BOOKMARK [2][-]{subsection.6.5}{Target Figures}{section.6}% 48
 \BOOKMARK [2][-]{subsection.6.6}{Access Control}{section.6}% 49
 \BOOKMARK [1][-]{section.7}{Index Structures for the MD data model}{}% 50
 \BOOKMARK [2][-]{subsection.7.1}{B-trees}{section.7}% 51
-\BOOKMARK [3][-]{section*.18}{B*-trees}{subsection.7.1}% 52
-\BOOKMARK [3][-]{section*.19}{Problems with B-trees}{subsection.7.1}% 53
+\BOOKMARK [3][-]{section*.19}{B*-trees}{subsection.7.1}% 52
+\BOOKMARK [3][-]{section*.20}{Problems with B-trees}{subsection.7.1}% 53
 \BOOKMARK [2][-]{subsection.7.2}{Grid-Files}{section.7}% 54
 \BOOKMARK [2][-]{subsection.7.3}{R-trees}{section.7}% 55
-\BOOKMARK [3][-]{section*.20}{Algorithms for R-trees}{subsection.7.3}% 56
+\BOOKMARK [3][-]{section*.21}{Algorithms for R-trees}{subsection.7.3}% 56
 \BOOKMARK [2][-]{subsection.7.4}{R+-trees}{section.7}% 57
 \BOOKMARK [2][-]{subsection.7.5}{R*-trees}{section.7}% 58
-\BOOKMARK [3][-]{section*.26}{Insertion}{subsection.7.5}% 59
-\BOOKMARK [3][-]{section*.27}{Splitting}{subsection.7.5}% 60
-\BOOKMARK [3][-]{section*.28}{Forced Reinsert}{subsection.7.5}% 61
+\BOOKMARK [3][-]{section*.27}{Insertion}{subsection.7.5}% 59
+\BOOKMARK [3][-]{section*.28}{Splitting}{subsection.7.5}% 60
+\BOOKMARK [3][-]{section*.29}{Forced Reinsert}{subsection.7.5}% 61
 \BOOKMARK [2][-]{subsection.7.6}{UB-trees}{section.7}% 62
-\BOOKMARK [3][-]{section*.29}{Z-Ordering}{subsection.7.6}% 63
-\BOOKMARK [3][-]{section*.31}{Insertion}{subsection.7.6}% 64
-\BOOKMARK [3][-]{section*.32}{Range queries}{subsection.7.6}% 65
-\BOOKMARK [3][-]{section*.33}{Tetris algorithm}{subsection.7.6}% 66
+\BOOKMARK [3][-]{section*.30}{Z-Ordering}{subsection.7.6}% 63
+\BOOKMARK [3][-]{section*.32}{Insertion}{subsection.7.6}% 64
+\BOOKMARK [3][-]{section*.33}{Range queries}{subsection.7.6}% 65
+\BOOKMARK [3][-]{section*.34}{Tetris algorithm}{subsection.7.6}% 66
 \BOOKMARK [2][-]{subsection.7.7}{Bitmap Indices}{section.7}% 67
-\BOOKMARK [3][-]{section*.34}{Multicomponent Bitmap Indices}{subsection.7.7}% 68
-\BOOKMARK [3][-]{section*.35}{Range-coded Bitmap Indices}{subsection.7.7}% 69
-\BOOKMARK [3][-]{section*.36}{Interval-coded Bitmap Indices}{subsection.7.7}% 70
+\BOOKMARK [3][-]{section*.35}{Multicomponent Bitmap Indices}{subsection.7.7}% 68
+\BOOKMARK [3][-]{section*.36}{Range-coded Bitmap Indices}{subsection.7.7}% 69
+\BOOKMARK [3][-]{section*.37}{Interval-coded Bitmap Indices}{subsection.7.7}% 70
 \BOOKMARK [2][-]{subsection.7.8}{Partitioning}{section.7}% 71
-\BOOKMARK [3][-]{section*.37}{Horizontal Partitioning}{subsection.7.8}% 72
-\BOOKMARK [3][-]{section*.40}{Vertical Partitioning}{subsection.7.8}% 73
+\BOOKMARK [3][-]{section*.38}{Horizontal Partitioning}{subsection.7.8}% 72
+\BOOKMARK [3][-]{section*.41}{Vertical Partitioning}{subsection.7.8}% 73
 \BOOKMARK [1][-]{section.8}{Star Join Optimizations}{}% 74
+\BOOKMARK [1][-]{section.9}{Materialized Views}{}% 75
+\BOOKMARK [2][-]{subsection.9.1}{Usage of Materialized Views}{section.9}% 76
+\BOOKMARK [3][-]{section*.42}{Monoblock Queries}{subsection.9.1}% 77
+\BOOKMARK [3][-]{section*.43}{Multiblock Queries}{subsection.9.1}% 78
+\BOOKMARK [2][-]{subsection.9.2}{Additivity of Aggregation Functions}{section.9}% 79
+\BOOKMARK [2][-]{subsection.9.3}{Selection of Materialized Views}{section.9}% 80
+\BOOKMARK [2][-]{subsection.9.4}{Update of Materialized Views}{section.9}% 81
+\BOOKMARK [1][-]{section.10}{Data Mining}{}% 82
+\BOOKMARK [2][-]{subsection.10.1}{Data Mining Methods}{section.10}% 83
+\BOOKMARK [3][-]{section*.44}{Clustering}{subsection.10.1}% 84
+\BOOKMARK [3][-]{section*.45}{Classification}{subsection.10.1}% 85
+\BOOKMARK [3][-]{section*.46}{Association Rules}{subsection.10.1}% 86
+\BOOKMARK [3][-]{section*.50}{Summary}{subsection.10.1}% 87
