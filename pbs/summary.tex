@@ -1,0 +1,307 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+\graphicspath{{images/}}
+
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[a4paper]{geometry}
+
+\usepackage{listings}
+\lstset{language=SQL}
+
+\usepackage{tcolorbox}
+\newtcolorbox{keypointbox}
+{
+    arc=0mm,
+    colback=red!20,
+    colframe=red!80,
+    leftrule=5pt,
+    toprule=0pt,
+    rightrule=0pt,
+    bottomrule=0pt
+}
+
+\setcounter{secnumdepth}{2}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\title{Physically Based Simulation}
+\author{Alexander Schlögl}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+This is \textbf{my interpretation} of the lecture slides.
+I tried to be very verbose and explain everything, all while removing irrelevant parts from the lecture.
+Using this you should be able to pass the lecture easily.
+\large{\textbf{However, I do not take responsibility for any bad results and will not be blamed from anyone.
+This was a lot of work and I did it to save others (especially students of following semesters) from having to do this themselves.
+Use this summary at your own responsibility.}}
+If you have any feedback, feel free to create an issue on the \href{https://github.com/alxshine/lecture-notes}{git}.
+I don't promise I will fix anything, but I will try.
+\newpage
+
+\section{Introduction}
+Physically based simulation is exactly what it sounds like.
+Creating accurate visualizations of real world objects by simulating the underlying physical equations.
+While doing so, a number of shortcuts is taken to speed up computation time.
+We do not need very accurate results, we need results that \textbf{look accurate}.
+
+\section{Mass Spring Systems}
+Mass Spring Systems are a simple way of simulating deformation, and they are often used for hair, clothes etc.
+The main steps of employing mass spring systems are:
+\begin{enumerate}
+    \item Discretizing the object into mass points and connecting them with springs
+    \item Setting up the equations of motion
+    \item Discretizing the equations of motion in time
+    \item Determining internal and external forces acting on mass points
+    \item Solving the equations numerically
+\end{enumerate}
+
+The location and mass distribution of the discretized points has a large influence on the accuracy of the simulation.
+The simplest approximation is just giving all points equal mass, but better methods exist.
+Each point has a position $\bm{x_i}$, a velocity $\bm{v_i}$ and a mass $\bm{m_i}$.
+The points are then connected with springs.
+The spring topology also heaviliy influences the accuracy, and certain heuristics exist.
+Each spring stores a stiffness $k_q$, rest length $L_q$ and current length $l_q$.
+
+\subsection{External Forces $f^{Ext}$}
+External forces include gravity ($f^G_i = m_i \left[0\quad0\quad9.81\right]^T m/s^2$), friction and collisions.
+
+\subsection{Internal Forces $f^{Int}$}
+The internal forces are the forces exerted by the springs, as well as (viscous) damping.
+Spring force is given by Hooke's law:
+\begin{equation}
+    f = k(L-l)
+\end{equation}
+or in 3D
+\begin{equation}
+    \bm{f_{ij}} = k(L-\norm{\bm{x_i} - \bm{x_j}})\frac{\bm{x_i}-\bm{x_j}}{\norm{\bm{x_i}-\bm{x_j}}}
+\end{equation}
+for multiple springs connected to a single mass point, just sum up all the individual spring forces.
+
+\subsection{Spring Topologies and Parameters}
+In general springs are connected in three different ways.
+Structural springs connect neighboring points and oppose stretching; diagonal strings oppose shearing and interleaving springs oppose bending.
+For cloth or other objects that need to be bent, springs that skip multiple points can be used.
+
+The stiffness for the springs can be calculated with existing heuristics or be set in such a way that they accurately represent known deformations.
+Usually manual tuning is required.
+
+\subsection{Equations of Motion}
+As the mass of the points, as well as the forces acting on them is known, we can simulate them using Newton's laws of motion.
+From Newton's second law follows
+\begin{equation}
+    \label{eq:acceleration}
+    m_i\frac{d^2\bm{x_i}(t)}{dt^2} = \bm{f_i^{Int}}(t) + \bm{f_i^{Ext}}(t)
+\end{equation}
+with which we can calculate the acceleration and update the velocity of the mass point.
+\Cref{eq:acceleration} is a first order ordinary differential equation (ODE), which we can solve and the numerically integrate.
+For the integration step we differentiate between explicit methods (where all required quantities are known) and implicit methods (where we need to solve a system of equations).
+
+\subsection{Numerical Integration Methods}
+As we actually need two integrations for our systems (one for $\bm{v}$ and one for $\bm{x}$) we need two seperate integration steps.
+For this we simply introduce a variable for velociy and integrate it to get the new position.
+
+All integration methods are derived from Taylor series expansion, and some use multiple Taylor series or more parts of it to reach higher accuracy.
+As a reminder, the Taylor series for $y(x)$ about development point $t$ is
+\begin{equation}
+    y(x) = \sum_{n=0}^\infty \frac{y^{(n)}(t)}{n!} (x-t)^n
+\end{equation}
+and if we evaluate this at point $t+h$ we get
+\begin{equation}
+    \label{eq:taylor}
+    y(t+h) = y(t) + y'(t)h+\frac{y''(t)}{2!}h^2 + \frac{y'''(t)}{3!}h^3+...
+\end{equation}
+
+From that we can derive our numerical integration methods and their accuracy.
+
+\subsubsection{Euler Method}
+Forward Euler is the simplest integration method.
+It is derived by using the first two summands of the Taylor series, giving us the following equation
+\begin{equation}
+    y(t+h) = y(t) + y'(t)h + \mathcal{O}(h^2)
+\end{equation}
+with our error being a function in the realm of $\mathcal{O}(h^2)$.
+
+The following calculations are done for the Forward Euler:
+\begin{itemize}
+    \item $\bm{x}(t+h) = \bm{x}(t) + h\cdot \bm{v}(t)$
+    \item $\bm{f}(t) = \bm{f}^{Int}(t) + \bm{f}^{Ext}(t)$
+    \item $\bm{a}(t) = \frac{1}{m}(\bm{f}(t)-\gamma \bm{v}(t))$ (where $\gamma$ is the damping factor)
+    \item $\bm{v}(t+h) = \bm{v}(t) + h \cdot \bm{a}(t)$
+\end{itemize}
+
+In order to improve behaviour of the Euler method, we can either directly reuse new positions
+\begin{align}
+    \bm{x}(t+h) &= \bm{x}(t) + h \bm{v}(t)\\
+    \bm{v}(t+h) &= \bm{v}(t) + h \bm{a}(\bm{x}(t+h), \bm{v}(t))
+\end{align}
+or directly reuse the new velocities
+\begin{align}
+    \bm{v}(t+h) &= \bm{v}(t) + h \bm{a}(\bm{x}(t), \bm{v}(t))\\
+    \bm{x}(t+h) &= \bm{x}(t) + h \bm{v}(t+h)
+\end{align}
+
+Using these improvements is known as the Symplectic Euler.
+
+\subsubsection{Heun's Method}
+This integrator uses more summands in its approximation:
+\begin{equation}
+    \label{eq:heun}
+    y(t+h) = y(t) + h y'(t) + \frac{h^2}{2}y''(t) + \mathcal{O}(h^3)
+\end{equation}
+As we don't know the second derivative, we approximate it with forward differences:
+\begin{equation}
+    \label{eq:second_derivative}
+    y''(t) = \frac{y'(t+h) - y'(t)}{h} + \mathcal{O}(h)
+\end{equation}
+
+By plugging \Cref{eq:second_derivative} into \Cref{eq:heun} we get
+\begin{align}
+    y(t+h)  &\approx y(t) + hy'(t) + \frac{h^2}{2} (\frac{y'(t+h)-y'(t)}{h})\\
+            &\approx y(t) + hy'(t) + \frac{h}{2} y'(t+h) - \frac{h}{2} y'(t)\\
+            &\approx y(t) + \frac{h}{2}(y'(t) + y'(t+h))
+\end{align}
+
+As we don't know $y'(t+h)$ yet when we evaluate this, we approximate it with a regular Euler step.
+
+\begin{keypointbox}
+    Heun's method uses the average of the current velocity and the next velocity for the update step
+\end{keypointbox}
+
+The implementation steps for Heun's method are the following
+\begin{itemize}
+    \item $\bm{a}(t) = \frac{1}{m}(\bm{f}(t) - \gamma \bm{v}(t))$
+    \item $\bm{\tilde{v}}(t+h) = \bm{v}(t) + h\bm{a}(t)$
+    \item $\bm{\tilde{x}}(t+h) = \bm{x}(t) + h\bm{\tilde{v}}(t)$
+    \item $\bm{\tilde{a}}(t+h) = \frac{1}{m}(\bm{\tilde{f}}(t+h) - \gamma \bm{\tilde{v}}(t+h))$
+    \item $\bm{x}(t+h) = \bm{x}(t) + h \frac{\bm{v}(t) + \bm{\tilde{v}}(t+h)}{2}$
+    \item $\bm{v}(t+h) = \bm{v}(t) + h \frac{\bm{a}(t) + \bm{\tilde{v}}(t+h)}{2}$
+\end{itemize}
+
+\subsubsection{Midpoint Method}
+Heun's method averages $y'(t)$ and $y'(t+h)$.
+The midpoint method only determinse $y'$ at $t+h/2$, giving us the same accuracy with less work.
+We approximate $y'(t+h/2)$ with an Euler step.
+
+For our mass spring use case we need to approximate both $\bm{\tilde{v}}$ and $\bm{\tilde{a}}$ (and thus $\bm{\tilde{x}}$) for $t+h/2$.
+
+\subsubsection{Runge-Kutta Methods}
+These are more general cases of the Midpoint method.
+They increase accuracy by performing intermediate steps.
+The most common variant is RK4.
+Due to the increased accuracy, larger timesteps can be used, but this increases computational overhead.
+
+RK4 works as follows:
+\begin{align}
+    k_1 &= f(t, y(t))\\
+    k_2 &= f(t+h/2, y(t)+h/2k_1)\\
+    k_3 &= f(t+h/2, y(t)+h/2k_2)\\
+    k_4 &= f(t, y(t)+hk_3)
+\end{align}
+The value for $y(t+h)$ is the calculated using a weighted average
+\begin{equation}
+    y(t+h) = y(t) + \frac{h}{6} (k_1 + 2k_2 + 2k_3 + k_4)
+\end{equation}
+
+Implementation of RK4 (or any RK method) should be pretty clear.
+
+\subsubsection{Verlet Method}
+For this method we start with two Taylor series expansions:
+\begin{align}
+    y(t+h) &= y(t) + y'(t)h + \frac{y''(t)}{2!}h^2 + \frac{y'''(t)}{3!}h^3 + \mathcal{O}(h^4)\\
+    y(t-h) &= y(t) - y'(t)h + \frac{y''(t)}{2!}h^2 - \frac{y'''(t)}{3!}h^3 + \mathcal{O}(h^4)
+\end{align}
+then, by summing them up we get
+\begin{equation}
+    y(t+h) = 2y(t) - y(t-h) + h^2y''(t) + \mathcal{O}(h^4)
+\end{equation}
+
+As you can see the velocity terms cancels out, leading to the typical assumption that the force term is independent of velocity (no damping).
+The Verlet method is a symplectic integrator (it has nice energy conservation properties in Hamiltonian systems) and is also time reversible.
+
+The velocity term here is never explicitly calculated.
+If we do need it (e.g. for kinetic energy) we need to approximate it either via backward or central differences.
+
+\subsubsection{Leapfrog Method}
+The main goal of this method is to improve the velocity estimate.
+It is similar to the Verlet method but from the Taylor series for velocity:
+\begin{align}
+    \bm{v}(t+h) &= \bm{v}(t) + \bm{v}'(t)h + \frac{\bm{v}''(t)}{2!}h^2 + \frac{\bm{v}'''(t)}{3!} h^3 + \mathcal{O}(h^4)\\
+    \bm{v}(t-h) &= \bm{v}(t) - \bm{v}'(t)h + \frac{\bm{v}''(t)}{2!}h^2 - \frac{\bm{v}'''(t)}{3!} h^3 + \mathcal{O}(h^4)
+\end{align}
+and by subtracting we get
+\begin{equation}
+    \bm{v}(t+h) = \bm{v}(t-h) + 2\bm{v}'(t)h + \mathcal{O}(h^3)
+\end{equation}
+
+The Leapfrog method then employs shifted updates, with $\bm{v}$ being updated for $t+h/2$ and $\bm{x}$ and $\bm{a}$ being updated for $t$.
+This gives us an error of only $\mathcal{O}(h^3)$ with only one force evaluation.
+We need to initialize $\bm{v}(t_{1/2})$ with e.g. an Euler step.
+
+\subsubsection{Implicit Euler}
+The Implicit Euler formulates the update equation like as follows
+\begin{equation}
+    y_{n+1} = y_n + h \cdot f(t_{n+1}, y_{n+1})
+\end{equation}
+
+Due to this, we have to solve for an unknown in every update step.
+One option is the \textbf{fixed-point iteration}
+\begin{equation}
+    y_{n+1}^{(k+1)} = y_n + h \cdot f(t_{n+1}, y_{n+1}^{(k)})
+\end{equation}
+which requires initialization such as $y_{n+1}^{(0)} = y_n$ or $y_{n+1}^{(0)} = y_n + h \cdot f(t_n, y_n)$.
+
+Another option would be \textbf{Newton's Method}.
+
+\subsection{Test Equation}
+We can study stability behaviour of a solver via a linear test equation (Dahlquist's equation):
+\begin{equation}
+    \label{eq:dahlquist}
+    y'(t) = \lambda \cdot y(t)
+\end{equation}
+which gives us the following solution for $y(t)$ (assuming $\lambda \in \mathbb{R}$)
+\begin{equation}
+    y(t) = e^{\lambda t} y_0
+\end{equation}
+
+An example for the forward Euler:
+The update step is
+\begin{equation}
+    y_{n+1} = y_n + h \cdot y_n'
+\end{equation}
+by inserting the test equation we get
+\begin{equation}
+    y_{n+1} = (1 + \lambda h) y_n
+\end{equation}
+which with recursive evaluation gives us
+\begin{equation}
+    y_{n+1} = (1 + \lambda h)^{n+1} y_0
+\end{equation}
+
+This shows that the forward Euler is unconditionally unstabel if $\lambda > 0$ and stable iff $-2 < h\lambda < 0$.
+
+\subsection{Collision Handling}
+When using mass spring systems, a simple form of collision detection and handling can be required.
+For this, penalty forces are used.
+In the penalty forces approach any penetration of an object into another creates a spring force separating both objects.
+This approach is only an approximation, but can be very useful due to its simplicity.
+
+\subsection{Problems of Mass Spring Systems}
+The behaviour of the system is topology dependent.
+Also, we do not have an explicit notion of volume preservation, which can result in systems collapsing on themselves.
+This is again dependent on their topology.
+
+\end{document}
