@@ -1,17 +1,37 @@
-\contentsline {section}{\numberline {1}Introduction}{2}{section.1}
-\contentsline {section}{\numberline {2}Mass Spring Systems}{2}{section.2}
-\contentsline {subsection}{\numberline {2.1}External Forces $f^{Ext}$}{2}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Internal Forces $f^{Int}$}{2}{subsection.2.2}
-\contentsline {subsection}{\numberline {2.3}Spring Topologies and Parameters}{3}{subsection.2.3}
-\contentsline {subsection}{\numberline {2.4}Equations of Motion}{3}{subsection.2.4}
-\contentsline {subsection}{\numberline {2.5}Numerical Integration Methods}{3}{subsection.2.5}
-\contentsline {subsubsection}{Euler Method}{4}{section*.2}
-\contentsline {subsubsection}{Heun's Method}{4}{section*.3}
-\contentsline {subsubsection}{Midpoint Method}{5}{section*.4}
-\contentsline {subsubsection}{Runge-Kutta Methods}{5}{section*.5}
-\contentsline {subsubsection}{Verlet Method}{6}{section*.6}
-\contentsline {subsubsection}{Leapfrog Method}{6}{section*.7}
-\contentsline {subsubsection}{Implicit Euler}{6}{section*.8}
-\contentsline {subsection}{\numberline {2.6}Test Equation}{7}{subsection.2.6}
-\contentsline {subsection}{\numberline {2.7}Collision Handling}{7}{subsection.2.7}
-\contentsline {subsection}{\numberline {2.8}Problems of Mass Spring Systems}{7}{subsection.2.8}
+\contentsline {section}{\numberline {1}Introduction}{3}{section.1}
+\contentsline {section}{\numberline {2}Mass Spring Systems}{3}{section.2}
+\contentsline {subsection}{\numberline {2.1}External Forces $f^{Ext}$}{3}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Internal Forces $f^{Int}$}{3}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}Spring Topologies and Parameters}{4}{subsection.2.3}
+\contentsline {subsection}{\numberline {2.4}Equations of Motion}{4}{subsection.2.4}
+\contentsline {subsection}{\numberline {2.5}Numerical Integration Methods}{4}{subsection.2.5}
+\contentsline {subsubsection}{Euler Method}{5}{section*.2}
+\contentsline {subsubsection}{Heun's Method}{5}{section*.3}
+\contentsline {subsubsection}{Midpoint Method}{6}{section*.4}
+\contentsline {subsubsection}{Runge-Kutta Methods}{6}{section*.5}
+\contentsline {subsubsection}{Verlet Method}{7}{section*.6}
+\contentsline {subsubsection}{Leapfrog Method}{7}{section*.7}
+\contentsline {subsubsection}{Implicit Euler}{7}{section*.8}
+\contentsline {subsection}{\numberline {2.6}Test Equation}{8}{subsection.2.6}
+\contentsline {subsection}{\numberline {2.7}Collision Handling}{8}{subsection.2.7}
+\contentsline {subsection}{\numberline {2.8}Problems of Mass Spring Systems}{8}{subsection.2.8}
+\contentsline {section}{\numberline {3}Solving PDEs with Finite Elements}{8}{section.3}
+\contentsline {subsection}{\numberline {3.1}Types of Differential Equations}{8}{subsection.3.1}
+\contentsline {subsubsection}{Ordinary Differential Equations (ODEs)}{8}{section*.9}
+\contentsline {subsubsection}{Partial Differential Equations (PDEs)}{9}{section*.10}
+\contentsline {subsubsection}{Classification of Second Order PDEs}{9}{section*.11}
+\contentsline {subsection}{\numberline {3.2}Initial and Boundary Conditions}{9}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}Solving PDEs}{9}{subsection.3.3}
+\contentsline {subsection}{\numberline {3.4}Finite Element Method}{9}{subsection.3.4}
+\contentsline {subsubsection}{Piecewise Approximation}{10}{section*.12}
+\contentsline {subsubsection}{Derivation of the Element Equation}{11}{section*.13}
+\contentsline {subsubsection}{Linear Triangulation}{11}{section*.14}
+\contentsline {subsubsection}{Assembling the Stiffness Matrix}{12}{section*.15}
+\contentsline {subsubsection}{Right-Hand Side}{12}{section*.16}
+\contentsline {section}{\numberline {4}Solving Systems of Equations}{12}{section.4}
+\contentsline {subsection}{\numberline {4.1}Jacobi Method}{12}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Solving an Equivalent Problem}{13}{subsection.4.2}
+\contentsline {subsubsection}{Steepest Gradient Method}{14}{section*.17}
+\contentsline {subsubsection}{Conjugate Gradient Method}{14}{section*.18}
+\contentsline {paragraph}{Summary}{15}{section*.19}
+\contentsline {subsection}{\numberline {4.3}FEM summary}{16}{subsection.4.3}
