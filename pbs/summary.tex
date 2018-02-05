@@ -575,4 +575,317 @@ The required steps for FEM are
 
 FEM is widely applicable, easy to use for complex geometries, easy to adapt for better approximation and it is easy to impose boundary conditions.
 However, the solution is only an approximate, careful setup is required, the amount of pre-processing required can become large, and parallelization is not straight forward (due to the interdependencies between elements).
+
+\section{Fluid Simulation}
+When trying to simulate fluids and flow, the two main approaches are particle based (where you simulate individual particles) and grid based (where you simulate what happens at fixed positions in the grid and interpolate).
+While there are others, the most important properties in the simulation are fluid velocity and fluid pressure.
+
+Usually we simplify by assuming constant density (e.g. water is nearly incompressible) and constant viscosity.
+
+\subsection{Navier-Stokes Equation}
+The equation is based on the conservation of momentum
+\begin{equation}
+    \label{eq:navier}
+    \frac{\partial \bm{v}}{\partial t} + (\bm{v} \cdot \nabla)\bm{v} = -\frac{1}{\rho} \nabla p + \upsilon \Delta \bm{v} + \bm{f}
+\end{equation}
+with a supporting equation derived from the conservation of mass
+\begin{equation}
+    \nabla \cdot \bm{v} = 0
+\end{equation}
+
+The symbols are as follows:
+\begin{itemize}
+    \item Velocity $\bm{v}$
+    \item Time $t$
+    \item Density $\rho$
+    \item Pressure $p$
+    \item Kinematic viscosity $\upsilon$
+    \item "Force" term (e.g. gravity) $\bm{f}$
+\end{itemize}
+
+On the left-hand side we have advection (self advection in this case), the normal advection "operator" is
+\begin{equation}
+    \frac{d}{dt} = \frac{\partial}{\partial t} + \bm{v} \cdot \nabla
+\end{equation}
+and if applied to any quantity it is just multiplied in (regular distribution over multiplication).
+Advection is the rate of change for a property of a fluid due to the particles moving.
+An example would be if you measure the temperature in a faucet and move the temperature control, the temperature at a given point will change because the "new" water coming in has a different temperature than the old.
+
+The right-hand side consists of pressure induced flow $-\frac{1}{\rho}\nabla p$.
+The direction and magnitude is given by the gradient of the pressure field, and because fluid flows from higher pressures to lower pressures, we need to reverse the direction.
+
+The next summand is viscosity based diffusion.
+It is given by the formula $\bm{f}_{viscosity} = \mu \nabla \bm{v}V$.
+The volume term is due to the force being an integration over a fluid parcel.
+Basically we assume constant diffusion over a given volume, and instead of integrating we multiply with the volume.
+The symbol $\mu$ stands for the dynamic viscosity parameter, and if we divide that by the mass $m$ we get the kinematic viscosity $\upsilon$ (which is dynamic viscosity combined with density).
+
+The $\bm{f}$ term is a bit confusingly named, as it stands for acceleration and not a force.
+This is because the entire equation is divided by the mass $m$ (this is also where $\frac{1}{\rho}$ comes from in the pressure term).
+
+Our support equation $\nabla \cdot \bm{v}$ just means that we have neither sources nor sinks in our flow, i.e. no flow is lost.
+This only holds for Newtonian fluids.
+
+\subsection{Solving the Navier-Stokes Equation}
+The Navier-Stokes equation gives us a set of PDEs, which in general cannot be solved analytically.
+For 3D flow we have four equations (momentum and continuity) for four unknowns (3D velocity vector \& pressure).
+In order to solve this system we use a numerical approach, by discretizing time and space and solving for each time step.
+As the Navier-Stokes equation is fairly complex, we split it into multiple steps to solve it more efficiently:
+\begin{align}
+    \frac{\partial \bm{v}}{\partial t} + (\bm{v} \cdot \nabla)\bm{v} &= -\frac{1}{\rho} \nabla p + \upsilon \Delta \bm{v} + \bm{f}\\
+    \frac{\partial \bm{v}}{\partial t} &= -(\bm{v} \cdot \nabla) \bm{v}\\
+    \frac{\partial \bm{v}}{\partial t} &= \bm{f}\\
+    \frac{\partial \bm{v}}{\partial t} &= v \Delta \bm{v}\\
+    \frac{\partial \bm{v}}{\partial t} &= - \frac{1}{\rho} \nabla p
+\end{align}
+After splitting, we solve each step individually and add them all up.
+This reduces accuracy but \textbf{greatly} increases simulation speed.
+As all the individual summands are differentials, and we are finally interested in a velocity field, we numerically integrate the results by multiplying with $\Delta t$.
+
+As we want a suitable solution to be divergence free, we need to solve Poisson's equation in the last step.
+Also, as the numeric approach is already introducing some errors, diffusion is usually dropped.
+It is generally very low, and the numerical solver introduces a larger error anyways.
+
+\subsection{Spatial Discretization}
+As a scheme for solving the differential equations we use the finite differences method.
+This means we create a grid and store all relevant properties at the grid points.
+The derivatives are then calculated by taking the difference between neighboring grid points and dividing the difference by their distance.
+When using the forward difference we reach $\mathcal{O}(h)$ and using central differences (approximating the derivative in a point using the two neighbors) gives us $\mathcal{O}(h^2)$.
+
+Due to the fact that using central differences results in an odd-even-decoupling and instabilities, staggered grids are often used.
+This means that we store a certain quantity at the centers of the cell (e.g. pressure), and others at the borders (e.g. velocities).
+This means that a recalculation of indices (might) be necessary.
+
+We can express higher order derivatives through derivatives of lower order, by repeatedly calculating finite differences.
+
+\subsubsection{Derivatives on a Staggered Grid}
+\begin{equation}
+    \bm{v}_{i,j} \approx \left[ \frac{v_x(i,j) + v_x(i+1,j)}{2} \quad \frac{v_y(i,j) + v_y(i, j+1)}{2} \right]^T
+\end{equation}
+
+Now if we want to express divergence $\nabla \cdot \bm{v} = \frac{\partial v_x}{\partial x} + \frac{\partial v_y}{\partial y}$ we employ finite differences and get
+\begin{equation}
+    (\frac{\partial v_x}{\partial x} + \frac{\partial v_y}{\partial y})_{(i,j)} \approx \frac{v_x(i+1, j) - v_x(i,j)}{h} + \frac{v_y(i, j+1) - v_y(i,j)}{h}
+\end{equation}
+for the derivation at the cell center (due to the staggered grid)
+
+For the Laplace operator (in 2D), which is used for solving Poisson's equation for the pressure field we have
+\begin{align}
+    (\frac{\partial^2 p}{\partial x^2})_{(i,j)} &= (\frac{\partial}{\partial x} (\frac{\partial p}{\partial x})_{(i,j)}\\
+        &\approx \frac{ \frac{\partial}{\partial x} p(i+1,j) - \frac{\partial}{\partial x} p(i,j)} {h}\\
+        &\approx \frac{ \frac{p(i+1, j) - p(i,j)}{h} - \frac{p(i,j) - p(i-1, j)}{h}}{h}\\
+        &\approx \frac{p(i+1, j) - 2p(i,j) + p(i-1,j)}{h^2}
+\end{align}
+for the $x$ component, and something very similar for the y component (with $j$ moving instead of $i$).
+Combining the two gives us
+\begin{equation}
+    \Delta p_{(i,j)} = (\frac{\partial^2 p}{\partial x^2} + \frac{\partial^2p}{\partial y^2})_{(i,j)} \approx \frac{p(i+1, j) + p(i-1,j) + p(i, j+1) + p(i, j-1) - 4p(i,j)}{h^2}
+\end{equation}
+
+This can be calculated efficiently using convolution in frequency space and Fast Fourier Transformation (FFT).
+
+\subsection{The Individual Solutions}
+We could solve the self advection via a simple forward Euler step, but that method is unstable.
+Instead we switch to a Semi-Lagrangian viewpoint and go in the reverse direction of the velocity in order to find the advected velocity.
+We calculate the location where the current particle comes from by going "back" in time, and inerpolating the wanted property (velocity in our case) from the neighboring cells of the result location.
+When doing this we have to make sure we do not leave our grid.
+
+External forces are simply added, as they are known.
+
+The diffusion term would require solving the heat equation $\frac{\partial \bm{v}}{\partial t} = v \Delta \bm{v}$.
+We could do this by using the (forward) Euler method, but again this would be unstable. 
+Instead we could use the Implicit (backward) Euler and solving the system of equations arising from discretization with an iterative method.
+Due to numerical dissipation the diffusion term is often dropped.
+
+Solving for pressure is a bit complicated, as the new velocities have to be divergence free.
+We start from performing a forward Euler update
+\begin{equation}
+    \bm{v}^{n+1} = \bm{\tilde{v}}_{diff} - \Delta t ( \frac{1}{\rho} \nabla p^n)
+\end{equation}
+Then we plug this into the mass conservation equation for the next step and get
+\begin{align}
+    \nabla \cdot \bm{v}^{n+1} &= 0\\
+    \nabla \cdot (\bm{\tilde{v}}_{diff} - \Delta t(\frac{1}{\rho} \nabla p^n)) &= 0\\
+    \nabla \cdot \bm{\tilde{v}}_{diff} &= \nabla \cdot (\Delta t(\frac{1}{\rho} \nabla p^n))\\
+    \nabla \cdot \bm{\tilde{v}}_{diff} &= \frac{\Delta t}{\rho} \nabla \cdot (\nabla p^n)\\
+    \nabla \cdot \nabla p^n = \Delta p^n &= \frac{\rho}{\Delta t} \nabla \cdot \bm{\tilde{v}}_{diff}
+\end{align}
+
+We then approximet the derivatives with finite differences (on both sides).
+This results in a system of linear equations $\bm{Ap} = \bm{d}$, with a coefficient matrix $\bm{A}$ (which is symmetric and sparse), our vector $\bm{p}$ containing the unknown pressures and the divergence terms $\bm{d}$ (multiplied with a constant).
+Each row in this equation system represents a single cell in our grid.
+We can solve this system using a component wise iterative solver, the main variants are the \textbf{Jacobi method} and the \textbf{Gauss-Seidel method}.
+These solvers use the same update formula
+\begin{equation}
+    p^{n+1}(i,j) = \frac{(h^2 d_{i,j} + p^n(i+1,j) + p^n(i-1,j) + p^n(i,j+1) + p^n(i,j-1))}{4}
+\end{equation}
+but the Gauss-Seidel method already uses the newly computed values if they are available.
+We could also use the conjugate gradient method or other solvers (multigrid solvers, which work hierarchically are often used in larger realistic problems).
+
+In order to find a suitable stopping point for these iterative solvers, we chan check the \textbf{residual} and compare it to an accuracy threshold:
+\begin{equation}
+    \bm{Ap} = \bm{d} \qquad \bm{r}^n = \bm{d} - \bm{Ap}^n
+\end{equation}
+The solution is exact if $\norm{\bm{r}^n} = 0$, and if $\norm{\bm{r}^n}$ is below our threshold, we accept the solution.
+As the matrix $\bm{A}$ is sparse we try to avoid explicitly computing it.
+It is defined by a fixed set of bands, which arise from the second derivative of the pressure.
+
+After finding a good enough approximation for the pressures we need to correct our velocities.
+
+\subsection{Boundary Conditions}
+Often we want to impose conditions on the velocity at the boundaries of our domain (e.g. for obstacles or hard boundaries).
+This can be done in different ways.
+
+\subsubsection{Dirichlet Boundary Condition}
+Dirichlet conditions directly prescribe the value of a function on the domain boundary (e.g. constant inflow at velocity inlet).
+For staggered grids, some values are not at the interface, and thus the next neighboring value has to be adjusted so the value at the interface is according to the boundary condition.
+
+\subsubsection{Neumann Boundary Conditions}
+These prescribe the value of the derivative on the domain boundary.
+For example setting the pressure at the boundary to the pressure \textit{right next to the boundary} should make flow through the obstacle impossible.
+
+\subsection{Vorticity Confinement}
+For this we need the definition of curl, which goes as follows (in 3D):
+\begin{equation}
+    \nabla \times \bm{v} = \textup{curl } \bm{v} = \begin{pmatrix} \frac{\partial}{\partial x}, \frac{\partial}{\partial y}, \frac{\partial}{\partial z} \end{pmatrix} \times \begin{pmatrix} v_x \\ v_y \\ v_z \end{pmatrix}
+\end{equation}
+and for a 2D vector field
+\begin{equation}
+    \nabla \times \bm{v} = \begin{pmatrix} \frac{\partial}{\partial x}, \frac{\partial}{\partial y} \end{pmatrix} \times \begin{pmatrix} v_x \\ v_y \end{pmatrix} = \frac{\partial v_y}{\partial x} - \frac{\partial v_x}{\partial y}
+\end{equation}
+
+Curl characterizes rotation at a point in a 3D field (vorticity), with the vectors pointing along the axis of rotation, with the magnitude being represented via the length.
+
+For vorticity confinement we then determine unit vectors pointing towards the center of rotation (via the gradient of the curl field magnitude).
+The cross product of this unit vector with the curl gives a force amplifying rotation.
+This is needed as an unfortunate side effect of the numerical approach is the suppression of vorticity.
+
+\section{Rigid Bodies}
+We sometimes are only interested in non-deformable (or rigid) objects and their behaviour.
+These are a lot easier to simulate than deformable objects, as their shape does not change.
+This section details how to deal with them.
+
+\subsection{Rotations}
+Rotations of objects can be represented in multiple ways.
+We can use Euler angles, which are rotations given by three consecutive rotations around the elementary axes, Quaternions, which are rotations around an arbitrary vector, and rotation matrices.
+They each have their advantages and disadvantages.
+
+\subsubsection{Rotation Matrices}
+Rotation matrices are real, orthogonal $3\times3$ matrices, where each column represents a direction of the transformed basis.
+They have the following properties:
+\begin{gather}
+    \bm{A}^{-1} = A^T\\
+    \bm{A}^T\bm{A} = \bm{AA}^T = \bm{I}\\
+    \textup{Det}(\bm{A}) = 1
+\end{gather}
+and concatenating (multiplying) two rotations yields a rotation.
+The length of vectors is also not changed due to rotation.
+
+\subsubsection{Quaternions}
+As rotation matrices need to be normalized (in order for their determinant to stay 1), they can create quite some computational overhead.
+We also need to ensure that the components are orthonormal, which also causes overhead.
+As an alternative representation of rotations we can use quaternions.
+\begin{gather}
+    q = a + b \cdot i + c \cdot j + d \cdot k \qquad a,b,c,d \in \mathbb{R}\\
+    i^2 = j^2 = k^2 = i \cdot j \cdot k = -1
+\end{gather}
+
+The units have a few relations between them (e.g. $i \cdot j = k$) but I won't list them here.
+They should be easy to find however.
+
+Quaternions can also be represented with vectors
+\begin{equation}
+    \bm{q} = (a,b,c,d) = (w,x,y,z) = (w, \bm{v})
+\end{equation}
+The basic operations for quaternions are
+\begin{align}
+    &\bm{q}_1 + \bm{q}_2 = (w_1, \bm{v}) + (w_2, \bm{v}_2)\\
+    &\bm{q}_1 \cdot \bm{q}_2 = w_1 \cdot w_2 + \bm{v}_1 \cdot \bm{v}_2 \qquad &\textup{(dot product)}\\
+    &\bm{q}^* = (w, -\bm{v}) \qquad &\textup{(conjugate)}\\
+    &\norm{\bm{q}} = \sqrt{\bm{q}^* \circ \bm{q}} = \sqrt{w^2 + \bm{v} \cdot \bm{v}}\\
+    &\bm{q}^{-1} = \bm{q}^* / \norm{\bm{q}}^2\\
+    &\bm{q}_1 \circ \bm{q}_2 = (w_1 + \bm{v}_1) (w_2 + \bm{v}_2) \qquad &\textup{(Hamilton product)}
+\end{align}
+
+There exist efficient conversions between rotation matrices and quaternions.
+This makes normalization and concatenation of rotations a lot easier.
+
+\subsection{Rigid Bodies}
+As the objects are undeformable, we can represent all their vertices by the center of mass $x_c$ and a displacement vector $r_i$:
+\begin{equation}
+    \bm{x}_i^t = \bm{x}^t + \bm{r}_i^t = (\bm{x}^0 + \bm{t}^t) + \bm{A}^t \cdot \bm{r}_0^t
+\end{equation}
+where $\bm{A}^t$ is the current rotation matrix.
+
+The velocity is then the derivative of the position
+\begin{equation}
+    \bm{v}_i^t = \frac{d\bm{x}_i^t}{dt} = \dot{\bm{x}}_i^t = \dot{\bm{x}}_{CM}^t + \dot{\bm{A}}^t \cdot \bm{r}_i^0 + \bm{A}^t \cdot \dot{\bm{r}}_i^0
+\end{equation}
+And because the displacement vector is constant, the last summand is zero.
+
+\subsubsection{Momentum}
+Linear momentum $\bm{p} = m \bm{v}$ is a vector quantitiy pointing in the direction of velocity.
+With no external influences momentum is conserved.
+
+Angular momentum is the rotational analog $\bm{L}_i = \bm{r}_i \times \bm{p}_i$.
+
+\subsubsection{Inertia}
+Similar to the mass for translation, we have the inertia tensor working against a torque applied.
+Analogously to linear momentum, the equation for angular momentum is $\bm{L} = \bm{I} \cdot \bm{\omega}$, with $\bm{I}$ being the inertia tensor and $\bm{\omega}$ being the angular velocity.
+
+The inertia tensor is not easy to calculate.
+Fortunately, we only have to calculate it once (for rigid objects), and can rotate it along with the object
+\begin{equation}
+    \bm{I} = \bm{A} \cdot \bm{I}^0 \cdot{A}^T
+\end{equation}
+There also exists an orientation in body space, which causes off-diagonal components of the inertia tensor to vanish.
+The inverse is just as easily derived
+\begin{equation}
+    \bm{I}^{-1} = (\bm{A} \cdot \bm{I}^0 \cdot \bm{A}^T)^{-1} = (\bm{A}^T)^{-1} (\bm{I}^0)^{-1} \bm{A}^{-1} = \bm{A} \cdot (\bm{I}^0)^{-1} \cdot \bm{A}^T
+\end{equation}
+which means we only have to invert $\bm{I}$ once.
+We need the inverse inertia tensor as $\bm{\omega} = \bm{I}^{-1} \cdot \bm{L}$.
+
+\subsection{Collisions}
+In rigid body collisions we want the objects to change direction instantenously.
+For this we use the impulse
+\begin{equation}
+    \bm{J} = \int \bm{f} dt \qquad \qquad \bm{J} = \bm{f}_{avg} \cdot \Delta t
+\end{equation}
+
+For collisions we have the so called restitution coefficient, which tells us how much of the impulse is lost (without friction) during the collision.
+It's the ration of velocities before and after
+\begin{equation}
+    \epsilon = -\frac{\bm{v}_{rel}^{t+} \bm{n}}{\bm{v}_{rel}^{t-} \bm{n}}
+\end{equation}
+for "fully" elastic collisions this coefficient is close to 1.
+
+From this we can calculate the impulse magnitude after the collision.
+\begin{align}
+    -\epsilon \cdot \bm{v}_{rel}^{t-}\bm{n} &= \bm{v}_{rel}^{t+} \bm{n}\\
+    -\epsilon \cdot \bm{v}_{rel}^{t-}\bm{n} &= (\bm{v}_{A}^{t+} - \bm{v}_{B}^{t+})\bm{n}\\
+    -\epsilon \cdot \bm{v}_{rel}^{t-}\bm{n} &= (\bm{v}_{A}^{t-} + j \frac{\bm{n}}{m_a} - \bm{v}_{B}^{t+} + j\frac{\bm{n}}{m_b})\bm{n}\\
+    -\epsilon \cdot \bm{v}_{rel}^{t-}\bm{n} &= \bm{v}_{A}^{t-}\bm{n} + j\bm{n} \cdot \frac{\bm{n}}{m_a} - \bm{v}_{B}^{t+}\bm{n} + j\bm{n} \cdot \frac{\bm{n}}{m_b}\\
+    -\epsilon \cdot \bm{v}_{rel}^{t-}\bm{n} &= \bm{v}_{rel}^{t-}\bm{n} + j(\bm{n} \cdot \bm{n}(m_A^{-1} + m_B^{-1}))\\
+    j &= \frac{-(1+\epsilon) \cdot \bm{v}_{rel}^{t-} \bm{n}}{\bm{n} \cdot \bm{n} (m_A^{-1} + m_B^{-1})}
+\end{align}
+
+This is only for the linear component of the impulse.
+We can do the same thing for the angular component as well, but I am too lazy to write those formulas now.
+The final velocity is a combination of the linear and angular components.
+
+\subsection{Resting Contacts}
+Resting contacts usually have to be handled separately to avoid instabilities.
+We require all forces to be determined at the same time, unless we want "wobbling" to happen.
+Resting contacts have the following constraints
+\begin{itemize}
+    \item Contact forces ensure that the contact point does not accalerate toward the other body
+    \item Contact force in normal direction must be repulsive to prevent bodies from sticking together
+    \item Contact forces become zero when the objects move apart
+\end{itemize}
+Resting contacts is a hard problem.
+
+\section{Collision Detection}
+
+
 \end{document}

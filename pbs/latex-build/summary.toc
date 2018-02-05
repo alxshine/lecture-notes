@@ -35,3 +35,22 @@
 \contentsline {subsubsection}{Conjugate Gradient Method}{14}{section*.18}
 \contentsline {paragraph}{Summary}{15}{section*.19}
 \contentsline {subsection}{\numberline {4.3}FEM summary}{16}{subsection.4.3}
+\contentsline {section}{\numberline {5}Fluid Simulation}{16}{section.5}
+\contentsline {subsection}{\numberline {5.1}Navier-Stokes Equation}{16}{subsection.5.1}
+\contentsline {subsection}{\numberline {5.2}Solving the Navier-Stokes Equation}{17}{subsection.5.2}
+\contentsline {subsection}{\numberline {5.3}Spatial Discretization}{18}{subsection.5.3}
+\contentsline {subsubsection}{Derivatives on a Staggered Grid}{18}{section*.20}
+\contentsline {subsection}{\numberline {5.4}The Individual Solutions}{19}{subsection.5.4}
+\contentsline {subsection}{\numberline {5.5}Boundary Conditions}{20}{subsection.5.5}
+\contentsline {subsubsection}{Dirichlet Boundary Condition}{21}{section*.21}
+\contentsline {subsubsection}{Neumann Boundary Conditions}{21}{section*.22}
+\contentsline {subsection}{\numberline {5.6}Vorticity Confinement}{21}{subsection.5.6}
+\contentsline {section}{\numberline {6}Rigid Bodies}{21}{section.6}
+\contentsline {subsection}{\numberline {6.1}Rotations}{21}{subsection.6.1}
+\contentsline {subsubsection}{Rotation Matrices}{22}{section*.23}
+\contentsline {subsubsection}{Quaternions}{22}{section*.24}
+\contentsline {subsection}{\numberline {6.2}Rigid Bodies}{22}{subsection.6.2}
+\contentsline {subsubsection}{Momentum}{23}{section*.25}
+\contentsline {subsubsection}{Inertia}{23}{section*.26}
+\contentsline {subsection}{\numberline {6.3}Collisions}{23}{subsection.6.3}
+\contentsline {subsection}{\numberline {6.4}Resting Contacts}{24}{subsection.6.4}

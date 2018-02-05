@@ -34,3 +34,22 @@
 \BOOKMARK [3][-]{section*.17}{Steepest Gradient Method}{subsection.4.2}% 34
 \BOOKMARK [3][-]{section*.18}{Conjugate Gradient Method}{subsection.4.2}% 35
 \BOOKMARK [2][-]{subsection.4.3}{FEM summary}{section.4}% 36
+\BOOKMARK [1][-]{section.5}{Fluid Simulation}{}% 37
+\BOOKMARK [2][-]{subsection.5.1}{Navier-Stokes Equation}{section.5}% 38
+\BOOKMARK [2][-]{subsection.5.2}{Solving the Navier-Stokes Equation}{section.5}% 39
+\BOOKMARK [2][-]{subsection.5.3}{Spatial Discretization}{section.5}% 40
+\BOOKMARK [3][-]{section*.20}{Derivatives on a Staggered Grid}{subsection.5.3}% 41
+\BOOKMARK [2][-]{subsection.5.4}{The Individual Solutions}{section.5}% 42
+\BOOKMARK [2][-]{subsection.5.5}{Boundary Conditions}{section.5}% 43
+\BOOKMARK [3][-]{section*.21}{Dirichlet Boundary Condition}{subsection.5.5}% 44
+\BOOKMARK [3][-]{section*.22}{Neumann Boundary Conditions}{subsection.5.5}% 45
+\BOOKMARK [2][-]{subsection.5.6}{Vorticity Confinement}{section.5}% 46
+\BOOKMARK [1][-]{section.6}{Rigid Bodies}{}% 47
+\BOOKMARK [2][-]{subsection.6.1}{Rotations}{section.6}% 48
+\BOOKMARK [3][-]{section*.23}{Rotation Matrices}{subsection.6.1}% 49
+\BOOKMARK [3][-]{section*.24}{Quaternions}{subsection.6.1}% 50
+\BOOKMARK [2][-]{subsection.6.2}{Rigid Bodies}{section.6}% 51
+\BOOKMARK [3][-]{section*.25}{Momentum}{subsection.6.2}% 52
+\BOOKMARK [3][-]{section*.26}{Inertia}{subsection.6.2}% 53
+\BOOKMARK [2][-]{subsection.6.3}{Collisions}{section.6}% 54
+\BOOKMARK [2][-]{subsection.6.4}{Resting Contacts}{section.6}% 55
