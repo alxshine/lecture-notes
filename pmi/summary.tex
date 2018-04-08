@@ -138,6 +138,36 @@ resulting in the product rule
 	P(X=x_i, Y=y_j) = \frac{n_{ij}}{N} = \frac{n_{ij}}{c_i} \frac{c_i}{N} = P(Y=y_j | X=x_i) P(X=x_i)
 \end{equation}
 
+\begin{keypointbox}
+	As a quicker notation for $P(X=x_i)$, $P(X)$ is often used.
+	As $x_i$ is an arbitrary fixed value in $X$, this doesn't make any difference whatsoever anywhere.
+\end{keypointbox}
+
+\subsubsection{Bayes' Theorem}
+From the product rule we know that $P(X,Y) = P(X|Y) P(Y)$.
+This also works in the opposite direction: $P(X|Y) = \frac{P(Y,X)}{P(Y)}$.
+If we now expand the part of $P(Y,X)$ in the nominator we get Bayes' Theorem:
+\begin{equation}
+	P(X|Y) = \frac{P(Y|X) P(X)}{P(Y)}
+\end{equation}
+
+\subsubsection{Likelihood}
+Given a set of parameters of a probability distribution $\mathbf{w}$ and a set of observed events $\mathcal{D}$ we can calculate the probability of $\mathcal{D}$.
+Using Bayes' theorem we can also calculate the most likely parameters $\mathbf{w}$ that gave rise to $\mathcal{D}$.
+This is called the Maximum Likelihood method.
+The formula is a simple application of Bayes' theorem, and looks as follows:
+\begin{equation}
+	P(\mathbf{w}|\mathcal{D}) = \frac{P(\mathbf{w} | \mathcal{D})}{P(\mathcal{D})}
+\end{equation}
+
+Then we look for the set of parameters that has the highest likelihood.
+As this is very hard to find, we often use other methods, but all use this as their basis.
+Note also that $P(\mathcal{D})$ is identical for all parameter combinations, so we can just ignore it.
+
+\subsubsection{Independent Variables}
+Iff the joint probability $P(X,Y)$ factorizes to the product of marginal probabilities $P(X)P(Y)$, then $X$ and $Y$ are said to be independent.
+This also means that $P(Y|X) = P(Y)$.
+
 \subsection{Probability Densities}
 
 \subsection{Conditional Independence}
