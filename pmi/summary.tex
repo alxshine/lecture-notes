@@ -26,6 +26,7 @@
 \setcounter{secnumdepth}{2}
 
 \usepackage{amsmath}
+\newcommand{\bigCI}{\mathrel{\text{\scalebox{1.07}{$\perp\mkern-10mu\perp$}}}}
 
 \usepackage{hyperref}
 \usepackage{cleveref}
@@ -164,17 +165,42 @@ Then we look for the set of parameters that has the highest likelihood.
 As this is very hard to find, we often use other methods, but all use this as their basis.
 Note also that $P(\mathcal{D})$ is identical for all parameter combinations, so we can just ignore it.
 
+\subsection{Probability Densities}
+As we also want to consider probabilities for continuous domains, we are interested in probability densities.
+The probability of some $x \in \mathbf{R}$ falling in $(x, x+\delta)$ is given by $p(x)\delta x$.
+If $\delta x \rightarrow 0$ then $p$ is called the probability density over $x$.
+Probability densities fulfill the following conditions:
+\begin{align}
+	p(x \in (a,b)) &= \int_a^b p(x) dx\\
+	p(x) &\ge 0\\
+	\int_{- \inf}^{\inf} p(x) &= 1
+\end{align}
+
+The sum and product rules take the forms:
+\begin{align}
+	p(x) &= \int p(x,y) dy\\
+	p(x, y) &= p(y|x) p(x)
+\end{align}
+
 \subsubsection{Independent Variables}
 Iff the joint probability $P(X,Y)$ factorizes to the product of marginal probabilities $P(X)P(Y)$, then $X$ and $Y$ are said to be independent.
 This also means that $P(Y|X) = P(Y)$.
 
-\subsection{Probability Densities}
-
 \subsection{Conditional Independence}
+Even if $X$ and $Y$ are not independent, they still might be independent given some $Z$.
+This means that $P(X,Y | Z) = P(X|Z) P(Y|Z)$ and is written as:
+\begin{equation}
+	X \bigCI Y \ |\ Z
+\end{equation}
 
 \section{Distribution Estimation}
+As we can't find the actual underlying distribution just by observing events, we resort to using models for approximating it.
+A lot of these models are graphical, because this makes the complex relationship between different random variables easier to understand.
+Representing the system as a graph also allows us to use algorithms from graph theory.
+In general the nodes (or vertices) represent random variables, and the links (edges) represent probabilistic relationships.
 
 \subsection{Bayesian Networks}
+
 
 \subsection{Markov Random Fields}
 
