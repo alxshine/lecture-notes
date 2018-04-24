@@ -15,7 +15,8 @@
 \contentsline {subsection}{\numberline {1.4}Conditional Independence}{5}{subsection.1.4}
 \contentsline {section}{\numberline {2}Distribution Estimation}{5}{section.2}
 \contentsline {subsection}{\numberline {2.1}Bayesian Networks}{6}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Markov Random Fields}{6}{subsection.2.2}
-\contentsline {subsection}{\numberline {2.3}Mixture of Gaussians}{6}{subsection.2.3}
-\contentsline {subsection}{\numberline {2.4}Restricted Boltzmann Machines}{6}{subsection.2.4}
-\contentsline {subsection}{\numberline {2.5}Neural Networks}{6}{subsection.2.5}
+\contentsline {subsubsection}{Curve fitting using Bayesian Networks}{6}{section*.12}
+\contentsline {subsection}{\numberline {2.2}Markov Random Fields}{7}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}Mixture of Gaussians}{7}{subsection.2.3}
+\contentsline {subsection}{\numberline {2.4}Restricted Boltzmann Machines}{7}{subsection.2.4}
+\contentsline {subsection}{\numberline {2.5}Neural Networks}{7}{subsection.2.5}

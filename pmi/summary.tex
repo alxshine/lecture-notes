@@ -204,7 +204,7 @@ Bayesian Networks represent relationships between probabilities using directed a
 They can be used to make predictions for random variables and their relations given a set of observations.
 Nodes that are not connected in the DAG are conditionally independent.
 
-A DAG $X$ is a bayesian network iff it satisfies the \emph{Local Markov Property}: each variable is conditionally independent of its non-descendants given its parent variables, in other words:
+A DAG $X$ is a Bayesian network iff it satisfies the \emph{Local Markov Property}: each variable is conditionally independent of its non-descendants given its parent variables, in other words:
 \begin{multline}
 	P(X_v = x_v | X_i = x_i \textup{ for each $X_i$ which is not a descendant of $X_v$}) \\
 	= P(X_v = x_v | X_j = x_j \textup{ for each $X_j$ which is a parent of $X_v$}
@@ -214,6 +214,44 @@ A DAG $X$ is a bayesian network iff it satisfies the \emph{Local Markov Property
 	The set of parents of $X_v$ is a subset of non-descendants of $X_v$ because the graph is acyclic.
 	This means that we only need to know the parents of $X_v$ to know $P(X_v = x_v)$, and not the entirety of the other variables.
 \end{keypointbox}
+
+The basis for Bayesian networks is repeated application of the product rule for probabilities.
+So, for the example of \Cref{im:Bayesnet}, the joint probability $P(G, S, R)$ is split into $P(G|S, R)P(S|R)P(R)$ ($G$ is for grass wet, $S$ is for sprinklers and $R$ is for rain).
+
+\begin{figure}[h]
+	\center
+	\includegraphics[width=0.4\textwidth]{bayes-net.png}
+	\caption{By AnAj - http://en.wikipedia.org/wiki/File:SimpleBayesNet.svg, Public Domain, https://commons.wikimedia.org/w/index.php?curid=24448318}
+	\label{im:Bayesnet}
+\end{figure}
+
+If we now observe e.g. $P(G)$ (which is $P(G|S,R)$) then we can apply Bayes' theorem to calculate $P(S|R)$ and $P(R)$.
+
+\subsubsection{Curve fitting using Bayesian Networks}
+While Bayesian Networks cannot be used to fit a curve directly, they can make calculating the probability of the parameters (likelihood) given the observed data easier.
+In order to build the network for this use case we simply recall that all data points are random variables depending on $\mathbf{w}$, which is our set of parameters.
+This is shown in \Cref{im:dependency}
+
+\begin{figure}[h]
+	\center
+	\includegraphics[width=0.4\textwidth]{dependency.png}
+	\caption{Dependency of the data points on the parameters}
+	\label{im:dependency}
+\end{figure}
+
+In Bayesian Networks repeating variables are often combined using a blue box like the one visible in \Cref{im:parameters} to save space.
+\Cref{im:parameters} also contains the variables the parameters themselves depend on, as well as the standard deviation $\sigma^2$.
+
+\begin{figure}[h]
+	\center
+	\includegraphics[width=0.6\textwidth]{bnet-parameters.png}
+	\caption{Calculating the likelihood of a given parameter set using a Bayesian network}
+	\label{im:parameters}
+\end{figure}
+
+\subsubsection{Conditional Independence}
+Conditional Independence can be read directly from the structure of a Bayesian Network.
+
 \subsection{Markov Random Fields}
 
 \subsection{Mixture of Gaussians}

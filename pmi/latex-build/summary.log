@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2018.4.15)  22 APR 2018 10:39
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2018.4.15)  24 APR 2018 10:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -980,20 +980,53 @@ m/it/12 P\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 Y\OT1/cmr/m/n/12 )$\OT1/cmss/m/n/12
 /m/n/12 ) =
  []
 
-[5] [6]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 225.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 225.
+[5] <images/bayes-net.png, id=172, 246.9225pt x 128.48pt>
+File: images/bayes-net.png Graphic file (type png)
+
+<use images/bayes-net.png>
+Package pdftex.def Info: images/bayes-net.png used on input line 223.
+(pdftex.def)             Requested size: 167.2989pt x 87.0496pt.
+
+Underfull \hbox (badness 1715) in paragraph at lines 224--224
+[]\OT1/cmss/m/n/10 Figure 1: []By AnAj - http://en.wikipedia.org/wiki/File:Simp
+leBayesNet.svg, Pub-lic Do-main,
+ []
+
+<images/dependency.png, id=175, 639.38875pt x 374.39874pt>
+File: images/dependency.png Graphic file (type png)
+
+<use images/dependency.png>
+Package pdftex.def Info: images/dependency.png used on input line 237.
+(pdftex.def)             Requested size: 167.2989pt x 97.96407pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<images/bnet-parameters.png, id=178, 756.8275pt x 596.2275pt>
+File: images/bnet-parameters.png Graphic file (type png)
+
+<use images/bnet-parameters.png>
+Package pdftex.def Info: images/bnet-parameters.png used on input line 247.
+(pdftex.def)             Requested size: 250.95476pt x 197.70184pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[6 <./images/bayes-net.png>] [7 <./images/dependency.png> <./images/bnet-parame
+ters.png>]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 260.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 260.
  (latex-build/summary.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 225.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 225.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 260.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 260.
 Package rerunfilecheck Info: File `summary.out' has not changed.
 (rerunfilecheck)             Checksum: <no file>.
  ) 
 Here is how much of TeX's memory you used:
- 18302 strings out of 494946
- 337316 string characters out of 6180981
+ 18334 strings out of 494946
+ 337887 string characters out of 6180981
  436359 words of memory out of 5000000
- 21276 multiletter control sequences out of 15000+600000
+ 21298 multiletter control sequences out of 15000+600000
  11807 words of font info for 42 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  54i,12n,73p,832b,424s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1011,10 +1044,10 @@ mssbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi
 12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/
 share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
-Output written on latex-build/summary.pdf (6 pages, 167707 bytes).
+Output written on latex-build/summary.pdf (7 pages, 239729 bytes).
 PDF statistics:
- 232 PDF objects out of 1000 (max. 8388607)
- 206 compressed objects within 3 object streams
- 45 named destinations out of 1000 (max. 500000)
- 181 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 258 PDF objects out of 1000 (max. 8388607)
+ 225 compressed objects within 3 object streams
+ 50 named destinations out of 1000 (max. 500000)
+ 204 words of extra memory for PDF output out of 10000 (max. 10000000)
 
