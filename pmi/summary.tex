@@ -4,6 +4,7 @@
 
 \usepackage{graphicx}
 \graphicspath{{images/}}
+\usepackage{subcaption}
 
 \renewcommand{\familydefault}{\sfdefault}
 \usepackage[a4paper]{geometry}
@@ -25,8 +26,9 @@
 
 \setcounter{secnumdepth}{2}
 
-\usepackage{amsmath}
+\usepackage{amsmath, centernot}
 \newcommand{\bigCI}{\mathrel{\text{\scalebox{1.07}{$\perp\mkern-10mu\perp$}}}}
+\newcommand{\nbigCI}{\centernot{\bigCI}}
 
 \usepackage{hyperref}
 \usepackage{cleveref}
@@ -186,12 +188,14 @@ The sum and product rules take the forms:
 Iff the joint probability $P(X,Y)$ factorizes to the product of marginal probabilities $P(X)P(Y)$, then $X$ and $Y$ are said to be independent.
 This also means that $P(Y|X) = P(Y)$.
 
-\subsection{Conditional Independence}
+\subsubsection{Conditional Independence}
 Even if $X$ and $Y$ are not independent, they still might be independent given some $Z$.
 This means that $P(X,Y | Z) = P(X|Z) P(Y|Z)$ and is written as:
 \begin{equation}
 	X \bigCI Y \ |\ Z
 \end{equation}
+
+Note that this is directly related to independence, because then we would require $X \bigCI Y\ |\ \emptyset$, and $P(X,Y) = P(X)P(Y)$.
 
 \section{Distribution Estimation}
 As we can't find the actual underlying distribution just by observing events, we resort to using models for approximating it.
@@ -250,7 +254,49 @@ In Bayesian Networks repeating variables are often combined using a blue box lik
 \end{figure}
 
 \subsubsection{Conditional Independence}
-Conditional Independence can be read directly from the structure of a Bayesian Network.
+Conditional Independence can be read directly from the structure of a Bayesian Network, using a process called D-separation.
+For D-separation we utilize the fact that there are three possible ways two nodes can be directly related: Head-to-Head, Head-to-Tail and Tail-to-Tail.
+The possibilities are shown in figure \Cref{im:relations}.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{hth.png}
+		\caption{Head-to-Head}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{htt.png}
+		\caption{Head-to-Tail}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{ttt.png}
+		\caption{Tail-to-Tail}
+	\end{subfigure}
+	\caption{The possible relations in Bayesian networks}
+	\label{im:relations}
+\end{figure}
+
+Now, for actually determining whether or not two variables are conditionally independent we consider the path between them in the Bayesian Network.
+They are independent iff the path is blocked, and vice versa.
+
+Let's consider the case of a Head-to-Head connection.
+If $c$ is unobserved, the path is unblocked, which can be proven by marginalizing over $c$:
+\begin{equation}
+	p(a,b) = \sum_c p(a|c) p(b|c) p(c) \neq \sum_c p(a|c) p(b|c) \quad \rightarrow \quad a \nbigCI b\ |\ \emptyset
+\end{equation}
+As soon as $c$ is observed however, this path becomes blocked:
+\begin{equation}
+	p(a,b|c) = \frac{p(a,b,c)}{p(c)} = \frac{p(a|c) p(b|c) p(c)}{p(c)} = p(a|c) p(b|c) \quad \rightarrow \quad a \bigCI b\ |\ c
+\end{equation}
+
+The case for Head-to-Tail relationships is very similar, and also becomes blocked as $c$ is observed.
+Tail-to-Tail relationships are different, as they become \emph{unblocked} as $c$ is observed.
+
+\subsubsection{Markov Blanket or Markov Boundary}
+The Markov Blanket for node $x_n$ is the set of all nodes (parents and children) that $x_n$ depends on.
+This means that fixing all nodes in the Markov Blanket of $x_n$ allows us to calculate $x_n$, and splits it from the rest of the graph.
+By doing this repeatedly (especially in the case of directed relationships), we can fix all values by starting from our observations.
+The possibility of easily seeing where this is applicable is what makes graphical models so powerful.
 
 \subsection{Markov Random Fields}
 

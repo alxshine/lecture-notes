@@ -12,11 +12,13 @@
 \BOOKMARK [3][-]{section*.10}{Likelihood}{subsection.1.2}% 12
 \BOOKMARK [2][-]{subsection.1.3}{Probability Densities}{section.1}% 13
 \BOOKMARK [3][-]{section*.11}{Independent Variables}{subsection.1.3}% 14
-\BOOKMARK [2][-]{subsection.1.4}{Conditional Independence}{section.1}% 15
+\BOOKMARK [3][-]{section*.12}{Conditional Independence}{subsection.1.3}% 15
 \BOOKMARK [1][-]{section.2}{Distribution Estimation}{}% 16
 \BOOKMARK [2][-]{subsection.2.1}{Bayesian Networks}{section.2}% 17
-\BOOKMARK [3][-]{section*.12}{Curve fitting using Bayesian Networks}{subsection.2.1}% 18
-\BOOKMARK [2][-]{subsection.2.2}{Markov Random Fields}{section.2}% 19
-\BOOKMARK [2][-]{subsection.2.3}{Mixture of Gaussians}{section.2}% 20
-\BOOKMARK [2][-]{subsection.2.4}{Restricted Boltzmann Machines}{section.2}% 21
-\BOOKMARK [2][-]{subsection.2.5}{Neural Networks}{section.2}% 22
+\BOOKMARK [3][-]{section*.14}{Curve fitting using Bayesian Networks}{subsection.2.1}% 18
+\BOOKMARK [3][-]{section*.17}{Conditional Independence}{subsection.2.1}% 19
+\BOOKMARK [3][-]{section*.19}{Markov Blanket or Markov Boundary}{subsection.2.1}% 20
+\BOOKMARK [2][-]{subsection.2.2}{Markov Random Fields}{section.2}% 21
+\BOOKMARK [2][-]{subsection.2.3}{Mixture of Gaussians}{section.2}% 22
+\BOOKMARK [2][-]{subsection.2.4}{Restricted Boltzmann Machines}{section.2}% 23
+\BOOKMARK [2][-]{subsection.2.5}{Neural Networks}{section.2}% 24
