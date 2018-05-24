@@ -183,4 +183,62 @@ A few examples are shown in \Cref{fig:tcombining}
 	\label{fig:tcombining}
 \end{figure}
 
+\section{Lexical Analysis (Scanning)}
+During scanning we want to split a stream of characters into a stream of tokens.
+The main goals are separating keywords, variables, constants, operators, etc.
+We do this by creating regular expressions (regexes) for every type of token we want.
+These regexes are then converted to finite automata, which we can simulate nicely.
+We also want this phase of the compiler to be as efficient as possible, in order to save time for the more complex phases.
+
+\subsection{Tokens}
+Tokens in general are defined as an enumerated type, because you almost never define new keywords.
+\begin{keypointbox}
+	If you are using a language where you can define keywords dynamically, seek help.
+\end{keypointbox}
+
+Common token types are keywords (if, else), special symbols (+,-,*), identifiers (for variables) and numbers (int, float, ...).
+These tokens can have one or more attributes, e.g. the string matched for the token (\emph{lexeme}), the numerical value for numbers, the operator for special symbols, ...
+These attributes, as well as the type, are stored in a token record, which is just a simple container object or struct or whatever your language supports.
+The scanner is usually controlled by the parser, which just calls it again and again, each time receiving a single token and processing it (adding it to the token table, matching grammar rules, ...).
+
+As most of us are in computer science because we are both lazy and smart (being less dumb than the average is sufficient), we want to do as little work as possible, and because some people actually program for fun, we don't have to.
+All we have to do is specify the different program tokens with regexes, and let an automatic tool build the lexical analyzer for us.
+
+\subsection{Regular Expressions}
+I will just skim regexes here because honestly, if you don't know them by now you have been cheating on all your CL exams, so why are you even reading this?
+All you need to start is an alphabet $\Sigma$, and the rest works as defined by this very simple grammar:
+\begin{equation*}
+	E = a \in (E \cup \{\epsilon\})\ |\ E|E\ |\ EE\ |\ E^*\ |\ (E)
+\end{equation*}
+So can do:
+\begin{itemize}
+	\item letters
+	\item or
+	\item concatenation
+	\item repitition
+	\item subexpressions
+\end{itemize}
+as defined in this order.
+The notation for regexes is quite inconsistent, but this is the bare minimum, as defined in theoretical CS.
+Most tools that use regexes can do some syntactic sugar, namely $+$ for one or more repititions, $.$ for any character, $\left[a-z\right]$ for any character (works with numbers as well), $\sim$ for set negation ($\hat{ }$ for character classes) and $?$ for optional subexpressions.
+With this you can create most regexes quite comfortably.
+
+\subsubsection{Ambiguity}
+Some strings may be matched by several regular expressions.
+Usually the longest match is used (e.g. "forever" is not a keyword, even though it starts with "for") but sometimes even that fails.
+If there is doubt, most scanners will just use the rule that comes first, but for some more granular decisions token delimiters can be needed (e.g. line end or whitespace).
+However, the problem with these is that they should not be consumed but instead returned to the input stream.
+This is called a lookahead character.
+Usually one lookahead character is enough, but sometimes more is required.
+
+\subsection{Deterministic Finite Automata (DFA)}
+Seriously, you should know this.
+For an actual implementation, you just use a switch (or a series of ifs if you have to) for the incoming character and then go to the next state accordingly.
+You can also do the same thing with a transition table, and code less, but transition tables can get very large.
+Then you have to decide whether you want to implement sparse matrices (or use them if you can) or write a whole bunch of stupid switches.
+
+\subsection{Constructing DFAs from Regexes}
+This works just as it did in FLAT (or FML).
+You create an NFA from the regexes (usually by combining NFAs for the subexpressions), and then create a DFA from that.
+There's really not much to it, but if you're still unsure, just look at the FLAT slides, or ask you friends.
 \end{document}
