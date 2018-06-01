@@ -29,6 +29,14 @@
 \usepackage{bm}
 
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\fig}[4]{
+	\begin{figure}[#1]
+		\center
+		\includegraphics[width=#2\textwidth]{#3.png}
+		\caption{#4}
+		\label{fig:#3}
+	\end{figure}
+	}
 
 \usepackage{hyperref}
 \usepackage{cleveref}
@@ -84,12 +92,7 @@ A compiler operates in phases, split according to the tasks performed.
 Common phases of a compiler are shown in \Cref{fig:phases}.
 While the distinction between the phases is not always clear cut, keeping a degree of modularity is often beneficial.
 
-\begin{figure}[h]
-	\center
-	\includegraphics[width=\textwidth]{phases.png}
-	\caption{The phases of a compiler}
-	\label{fig:phases}
-\end{figure}
+\fig{h}{}{phases}{The phases of a compiler}
 
 \subsubsection{Lexical Analysis (Scanning)}
 Scanning is the process of taking in a stream of characters and outputting a stream of tokens.
@@ -149,12 +152,7 @@ By combining the two we then get a (hopefully) correct, but inefficient compiler
 Then we can recompile the "good" compiler with the minimal one to get the final version of the compiler, which can then compile all future versions of itself (until you include new language features).
 The full workflow is shown in \Cref{fig:bootstrapping}
 
-\begin{figure}[h]
-	\center
-	\includegraphics[width=\textwidth]{bootstrapping.png}
-	\caption{The bootstrapping process in less text and more images}
-	\label{fig:bootstrapping}
-\end{figure}
+\fig{h}{}{bootstrapping}{The bootstrapping process in less text and more images}
 
 \subsubsection{Porting}
 Porting is the process of moving a compiler written it its own source language $A$ from machine $H$ to machine $K$.
@@ -164,24 +162,15 @@ The cross-compiler runs in language $H$ and produces language $K$ from source la
 The retargeted compiler is then compiled with the cross compiler to create a compiler for language $A$ that runs in language $K$.
 The entire workflow is shown in \Cref{fig:porting}
 
-\begin{figure}[h]
-	\center
-	\includegraphics[width=\textwidth]{porting.png}
-	\caption{Porting a compiler}
-	\label{fig:porting}
-\end{figure}
+\fig{h}{0.9}{porting}{Porting a compiler}
+\newpage
 
 \subsubsection{Combining T-Diagrams}
 Combining T-Diagrams is super easy and straight forward.
 Just replace the language (or letter) to the left of the T-Diagram with the one on the right.
 A few examples are shown in \Cref{fig:tcombining}
 
-\begin{figure}[h]
-	\center
-	\includegraphics[width=0.8\textwidth]{tcombining.png}
-	\caption{Combining T-Diagrams}
-	\label{fig:tcombining}
-\end{figure}
+\fig{h}{0.8}{tcombining}{Combining T-Diagrams}
 
 \section{Lexical Analysis (Scanning)}
 During scanning we want to split a stream of characters into a stream of tokens.
@@ -210,7 +199,7 @@ All you need to start is an alphabet $\Sigma$, and the rest works as defined by 
 \begin{equation*}
 	E = a \in (E \cup \{\epsilon\})\ |\ E|E\ |\ EE\ |\ E^*\ |\ (E)
 \end{equation*}
-So can do:
+So regexes can do:
 \begin{itemize}
 	\item letters
 	\item or
@@ -241,4 +230,112 @@ Then you have to decide whether you want to implement sparse matrices (or use th
 This works just as it did in FLAT (or FML).
 You create an NFA from the regexes (usually by combining NFAs for the subexpressions), and then create a DFA from that.
 There's really not much to it, but if you're still unsure, just look at the FLAT slides, or ask you friends.
+
+\section{Top-Down Parsers}
+\begin{keypointbox}
+	The following section is not part of the exam.
+	I still think it's interesting, and so it's part of this summary.
+	\textbf{EDIT:} Well... at least I thought it's interesting, but as soon as you get to LL(1) parsers and their creation everything just goes downhill.
+	So yeah, don't bother reading this chapter, I just included it because deleting it would mean wasted work.
+\end{keypointbox}
+
+Top-down parsing starts with the first symbol of a token stream and follows the steps of a leftmost derivation of the grammar.
+These parsers traverse the parse tree of the program in pre-order form from the root to the leaves.
+As the next choice of derivation can sometimes be ambiguous, multiple methods of disambiguation exist.
+One is using \emph{lookahead tokens}.
+By looking ahead in the token stream far enough to find a point where the rules become disambiguous, the parser can always find the correct derivation.
+This method causes some memory overhead, as the lookahead tokens have to be saved somewhere.
+
+The alternative is using \emph{backtracking}, and just deriving according to any possible rule, and backtracking if the choice was incorrect.
+This method potentially causes additional computation time due to the backtracking.
+This computational overhead makes them too slow to be used for practical parsers.
+
+\subsection{Recursive Descent Parsers}
+A recursive descent parser follows a very simple procedure.
+It takes the next input token, compares it to the expected ones for all possible rules, and recursively traverses down the parse tree for the \emph{one possible} rule.
+The matching for Nonterminals is done in a specific function for each non-terminal, and the terminals are matched in one large function.
+\Cref{fig:rdparser} shows a grammar and pseudocode for the corresponding recursive descent parser.
+The procedure (a function without a return value) for matching the \emph{factor} non-terminal is on the left, and the match procedure is on the right.
+
+\fig{h}{0.9}{rdparser}{Pseudocode for an arithmetic recursive descent parser}
+
+Due to the way recursive descent parsers work the grammar has to fulfill certain properties:
+\begin{itemize}
+	\item The next possible rule has to be unambiguous.
+		This can be achieved by left factoring the original grammar.
+	\item The grammar may not contain left recursion, as that would result in an infinite loop in the parser.
+		This can be solved by left recursion removal.
+\end{itemize}
+
+\subsubsection{Left Recursion Removal}
+For this we discern between two cases: direct and indirect left recursion.
+Direct left recursion is when the product of the rule starts with the nonterminal itself ($A \rightarrow A\alpha$).
+Indirect left recursion is when it is possible to derive a string of nonterminals and terminals that start with the original nonterminal.
+The second variant is a bit harder to remove.
+
+Removing direct left recursion (and transforming it to right recursion), is a fairly simple process.
+Illustrated on an example it goes as follows:
+\begin{equation}
+	A \rightarrow A\ \alpha\ |\ \beta
+\end{equation}
+where $\alpha$ and $\beta$ are strings of nonterminals and terminals, and $\beta$ does not start with $A$, can be transformed like the following:
+\begin{align}
+	A &\rightarrow \beta\ A'\\
+	A' &\rightarrow \alpha\ A'\ |\ \epsilon
+\end{align}
+
+This can be extended to any number of nonterminals:
+\begin{equation}
+	A \rightarrow A\alpha_1 | A\alpha_2 | \dots | A\alpha_n | \beta_1 | \beta_2 | \dots | \beta_m
+\end{equation}
+where $\beta_1 \dots \beta_n$ do not start with $A$ can be transformed as
+\begin{align}
+	A &\rightarrow \beta_1A' | \dots | \beta_mA'\\
+	A' &\rightarrow \alpha_1 A' | \dots | \alpha_n A' | \epsilon
+\end{align}
+
+In order to remove indirect left recursion, the nonterminals have to be put in an arbitrary order $A_1 \dots A_n$.
+Then, you eliminate all rules of the form $A_i \rightarrow A_j \gamma$ where $j<i$ (and $\gamma$ is some arbitrary string), and replace them with their definition.
+This does not change the language, but it changes the grammar, and therefore makes the parser more complicated to write and is in general a lot of work.
+
+\begin{keypointbox}
+	Removing left recursion is a bitch, just avoid it from the start if you can.
+	In some cases you might not be able to because right recursion and left associativity don't work too well together.
+\end{keypointbox}
+
+Left factoring is also very simple: Take every nonterminal starting with the same prefix $\alpha$:
+\begin{equation}
+	A \rightarrow \alpha \beta | \alpha \gamma
+\end{equation}
+and replace them using a new nonterminal
+\begin{align}
+	A &\rightarrow \alpha A'\\
+	A' &\rightarrow \beta | \gamma
+\end{align}
+Where $\alpha$ is the longest common substring in the nonterminals.
+
+\subsection{LL(1) Parsing}
+Writing a parser by hand for each grammar sucks.
+So we want a method of automatically generating parsers for a grammar.
+One method of achieving this is LL(1) parsing.
+It is called that because it parses input from left to right, uses a leftmost derivation, and uses one lookahead token.
+
+Generating a LL(1) parser requires a left-factored, right recursive grammar.
+These parsers use an explicit stack instead of recursive calls, and has only two functions: \emph{match} and \emph{generate}.
+After initialization, the stack is filled with the stack bottom symbol $\$$ and the start symbol of the grammar.
+\emph{Match} matches a token in the input stream with the top token of the parse stack, and removes both of them.
+\emph{Generate} pushes the results of a derivation step in the grammar onto the parse stack in reverse order.
+LL(1) parsers accept if the input is done, and the stack is empty.
+
+Choosing what to generate is sometimes very hard, so in order to create a transition table for the parser you need first and follow sets, which is annoying as all hell.
+
+\section{Bottom Up Parsing}
+If you read the previous chapter, you know that choosing the right derivation step is hard for top down parsing.
+This is the major strength of bottom-up parsers, because they can just take incoming tokens until a rule is fulfilled.
+They are named and differentiated by their derivation policy and and the number of lookahead tokens, but in general they all follow the same procedure.
+Their two main functions are \emph{shift}, which moves a token (or terminal) to the top of the stack, and \emph{reduce}, which replaces a string $\alpha$ on the stack with a nonterminal $A$ (according to a rule $A \rightarrow \alpha$).
+
+\subsection{LR(0) parsing}
+
+
 \end{document}
