@@ -231,14 +231,25 @@ This works just as it did in FLAT (or FML).
 You create an NFA from the regexes (usually by combining NFAs for the subexpressions), and then create a DFA from that.
 There's really not much to it, but if you're still unsure, just look at the FLAT slides, or ask you friends.
 
-\section{Top-Down Parsers}
-\begin{keypointbox}
-	The following section is not part of the exam.
-	I still think it's interesting, and so it's part of this summary.
-	\textbf{EDIT:} Well... at least I thought it's interesting, but as soon as you get to LL(1) parsers and their creation everything just goes downhill.
-	So yeah, don't bother reading this chapter, I just included it because deleting it would mean wasted work.
-\end{keypointbox}
 
+\section{Parsing}
+We apparently didn't cover parsing in the lecture (honestly I wasn't there all too often so I don't know).
+Accordingly, this chapter, as well as the sub-chapters top-down parsers and bottom-up parsers aren't part of the exam.
+As I did write some stuff on top-down and bottom-up parsing before I learned this, I still have some information on them.
+Including the whole sections was not sensible, but I did leave in the introductions to the subsections.
+Anyway, here it goes:
+
+Parsing is the process of converting the token stream into a syntax tree.
+The syntax tree contains all syntactic blocks of the program (if, while, for, functions, ...), and in its structure contains their relations.
+It is constructed according to rules defined in a context free grammar (I think context-sensitive grammars would also be possible, but the lecture slides only talk about context free grammars).
+You should remember how CFGs work from FLAT, so I won't discuss them here (they were skipped in the lecture anyway).
+
+The finished syntax tree is one of the most important artifacts of the compilation process.
+After it is annotated with additional information (types, consant values, ...) it fully represents the program and its structure, and already allows some optimizations to take place.
+
+The two main categories of parsing strategies are top-down and bottom-up.
+
+\subsection{Top Down Parsing}
 Top-down parsing starts with the first symbol of a token stream and follows the steps of a leftmost derivation of the grammar.
 These parsers traverse the parse tree of the program in pre-order form from the root to the leaves.
 As the next choice of derivation can sometimes be ambiguous, multiple methods of disambiguation exist.
@@ -250,92 +261,35 @@ The alternative is using \emph{backtracking}, and just deriving according to any
 This method potentially causes additional computation time due to the backtracking.
 This computational overhead makes them too slow to be used for practical parsers.
 
-\subsection{Recursive Descent Parsers}
-A recursive descent parser follows a very simple procedure.
-It takes the next input token, compares it to the expected ones for all possible rules, and recursively traverses down the parse tree for the \emph{one possible} rule.
-The matching for Nonterminals is done in a specific function for each non-terminal, and the terminals are matched in one large function.
-\Cref{fig:rdparser} shows a grammar and pseudocode for the corresponding recursive descent parser.
-The procedure (a function without a return value) for matching the \emph{factor} non-terminal is on the left, and the match procedure is on the right.
-
-\fig{h}{0.9}{rdparser}{Pseudocode for an arithmetic recursive descent parser}
-
-Due to the way recursive descent parsers work the grammar has to fulfill certain properties:
-\begin{itemize}
-	\item The next possible rule has to be unambiguous.
-		This can be achieved by left factoring the original grammar.
-	\item The grammar may not contain left recursion, as that would result in an infinite loop in the parser.
-		This can be solved by left recursion removal.
-\end{itemize}
-
-\subsubsection{Left Recursion Removal}
-For this we discern between two cases: direct and indirect left recursion.
-Direct left recursion is when the product of the rule starts with the nonterminal itself ($A \rightarrow A\alpha$).
-Indirect left recursion is when it is possible to derive a string of nonterminals and terminals that start with the original nonterminal.
-The second variant is a bit harder to remove.
-
-Removing direct left recursion (and transforming it to right recursion), is a fairly simple process.
-Illustrated on an example it goes as follows:
-\begin{equation}
-	A \rightarrow A\ \alpha\ |\ \beta
-\end{equation}
-where $\alpha$ and $\beta$ are strings of nonterminals and terminals, and $\beta$ does not start with $A$, can be transformed like the following:
-\begin{align}
-	A &\rightarrow \beta\ A'\\
-	A' &\rightarrow \alpha\ A'\ |\ \epsilon
-\end{align}
-
-This can be extended to any number of nonterminals:
-\begin{equation}
-	A \rightarrow A\alpha_1 | A\alpha_2 | \dots | A\alpha_n | \beta_1 | \beta_2 | \dots | \beta_m
-\end{equation}
-where $\beta_1 \dots \beta_n$ do not start with $A$ can be transformed as
-\begin{align}
-	A &\rightarrow \beta_1A' | \dots | \beta_mA'\\
-	A' &\rightarrow \alpha_1 A' | \dots | \alpha_n A' | \epsilon
-\end{align}
-
-In order to remove indirect left recursion, the nonterminals have to be put in an arbitrary order $A_1 \dots A_n$.
-Then, you eliminate all rules of the form $A_i \rightarrow A_j \gamma$ where $j<i$ (and $\gamma$ is some arbitrary string), and replace them with their definition.
-This does not change the language, but it changes the grammar, and therefore makes the parser more complicated to write and is in general a lot of work.
-
-\begin{keypointbox}
-	Removing left recursion is a bitch, just avoid it from the start if you can.
-	In some cases you might not be able to because right recursion and left associativity don't work too well together.
-\end{keypointbox}
-
-Left factoring is also very simple: Take every nonterminal starting with the same prefix $\alpha$:
-\begin{equation}
-	A \rightarrow \alpha \beta | \alpha \gamma
-\end{equation}
-and replace them using a new nonterminal
-\begin{align}
-	A &\rightarrow \alpha A'\\
-	A' &\rightarrow \beta | \gamma
-\end{align}
-Where $\alpha$ is the longest common substring in the nonterminals.
-
-\subsection{LL(1) Parsing}
-Writing a parser by hand for each grammar sucks.
-So we want a method of automatically generating parsers for a grammar.
-One method of achieving this is LL(1) parsing.
-It is called that because it parses input from left to right, uses a leftmost derivation, and uses one lookahead token.
-
-Generating a LL(1) parser requires a left-factored, right recursive grammar.
-These parsers use an explicit stack instead of recursive calls, and has only two functions: \emph{match} and \emph{generate}.
-After initialization, the stack is filled with the stack bottom symbol $\$$ and the start symbol of the grammar.
-\emph{Match} matches a token in the input stream with the top token of the parse stack, and removes both of them.
-\emph{Generate} pushes the results of a derivation step in the grammar onto the parse stack in reverse order.
-LL(1) parsers accept if the input is done, and the stack is empty.
-
-Choosing what to generate is sometimes very hard, so in order to create a transition table for the parser you need first and follow sets, which is annoying as all hell.
-
-\section{Bottom Up Parsing}
+\subsection{Bottom Up Parsing}
 If you read the previous chapter, you know that choosing the right derivation step is hard for top down parsing.
 This is the major strength of bottom-up parsers, because they can just take incoming tokens until a rule is fulfilled.
 They are named and differentiated by their derivation policy and and the number of lookahead tokens, but in general they all follow the same procedure.
 Their two main functions are \emph{shift}, which moves a token (or terminal) to the top of the stack, and \emph{reduce}, which replaces a string $\alpha$ on the stack with a nonterminal $A$ (according to a rule $A \rightarrow \alpha$).
 
-\subsection{LR(0) parsing}
+\section{Attribute Grammars \& Semantic Analysis}
+Attribute grammars are an extension to context free grammars.
+They allow the inclusion of additional semantic information, like types and values, which are very useful for a compiler.
+Attribute grammars are expressed through \emph{semantic rules} (also sometimes called \emph{attribute equations}).
+Semantic analysis is usually much less formalized than syntactical analysis and still has to be handwritten everytime.
+Semantic information is also very important for code optimization, which makes semantic analysis even more complicated and important.
 
+The syntax of attribute grammars is $X.a$, where $a$ is an attribute associated with $X$.
+It might be a data type, a value, a memory location or pretty much anything.
+We differentiate between \emph{static attributes} which can be evaluated at compile time (like most types, and object code of a procedure or function) and \emph{dynamic attributes} which need to be evaluated at runtime (values of nonconstants and memory locations for dynamically allocated structures).
+The time at which an attribute can be fixed is called the \emph{binding time} of that attribute.
 
+An attribute equation or semantic rule is of the form
+\begin{equation}
+	X_i.a_j = f_{ij}(X_0.a_1, \dots, X_0.a_k, X_1.a_1, \dots, X_1.a_k, \dots, X_n, a_1, \dots, X_n.a_k)
+\end{equation}
+where all $X_i \in N \cup T$ (the union of nonterminals and terminals) are reachable by derivation rules from the start symbol, and $a_1, \dots, a_k$ are attributes.
+In a less formal way this means the value of an attribute is a function of all other attributes.
+For a concrete instance the arguments of $f$ are often only a subset of all attributes.
+It is also important to note that the number of attribute equations for a semantic rule is not limited.
+(However, as the form of $f$ is not really specified, one could argue that instead of using multiple attribute equations one could also use a more complex function).
+
+For each grammar rule we can create a \emph{dependency graph}, giving us the order in which attributes need to be evaluated.
+We can get the structure of this graph from the arguments of the individual $f$.
+Depending on the dependency directions, we have different types of attributes: \emph{synthesized} and \emph{inherited}.
 \end{document}
