@@ -286,10 +286,45 @@ An attribute equation or semantic rule is of the form
 where all $X_i \in N \cup T$ (the union of nonterminals and terminals) are reachable by derivation rules from the start symbol, and $a_1, \dots, a_k$ are attributes.
 In a less formal way this means the value of an attribute is a function of all other attributes.
 For a concrete instance the arguments of $f$ are often only a subset of all attributes.
+Semantic errors arise and must be indicated during the evaluation of $f$.
 It is also important to note that the number of attribute equations for a semantic rule is not limited.
 (However, as the form of $f$ is not really specified, one could argue that instead of using multiple attribute equations one could also use a more complex function).
 
 For each grammar rule we can create a \emph{dependency graph}, giving us the order in which attributes need to be evaluated.
 We can get the structure of this graph from the arguments of the individual $f$.
 Depending on the dependency directions, we have different types of attributes: \emph{synthesized} and \emph{inherited}.
+
+\subsection{Synthesized Attributes \& S-attributed Grammars}
+An attribute $a$ is synthesized synthesized if all dependencies point from the children to the parents in the parse tree.
+That means that all synthesized attributes can be evaluated in one bottom-up postorder traversal (children first, then the parents, a standard recursive call) of the parse tree.
+An S-attributed grammar is an attribute grammar where every attribute is synthesized.
+
+\subsection{Inherited Attributes}
+Inherited attributes are propagated downwards in the parse tree.
+They can be inherited from parents to children or between siblings.
+In order to fix all inherited attributes, a preorder (only parent to children) or a combined preorder/inorder traversal (parents to children and between siblings) is required.
+The order in which children are evaluated is important for performance.
+
+\subsection{Dependency Graph Construction}
+Dependency graphs can be constructed at compile-time from the parse tree, however doing this is complex and increases compile time.
+The dependency graph must be a directed acyclic graph (DAG).
+
+Alternatively, the dependency graph can be based on an attribute evaluation order fixed by the compiler writer.
+
+\subsection{L-attributed Grammars}
+Several synthesized and inherited attributes can be calculated and propagatade in a single syntax tree traversal if:
+\begin{itemize}
+	\item Synthesized attributes depend on inherited attributes and other synthesized attributes
+	\item Inherited attributes do not depend on any synthesized attributes
+\end{itemize}
+Inherited attributes that depend on synthesized attributes require additional traversals.
+
+For L-attributed grammars the attributes can already be calculated during parsing.
+A grammar is L-attributed iff:
+\begin{equation}
+	\forall i,j: X_i.a_j = f_{ij}(X_0.a_1, \dots, X_0.a_k, \dots, X_{i-1}.a_1, \dots, X_{i-1}.a_k)
+\end{equation}
+that means that all attributes can be calculated if the previous nonterminals had all their attributes fixed.
+This allows the parser to fix all attributes in a left-right traversal for an L-attributed grammar.
+Any S-attributed grammar is L-attributed.
 \end{document}
