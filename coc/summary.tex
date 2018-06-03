@@ -59,6 +59,7 @@ If you have any feedback, feel free to create an issue on the \href{https://gith
 I don't promise I will fix anything, but I will try.
 \newpage
 
+%TODO: add kepoints for everything
 \section{Introduction to Compilers}
 A compiler is a program that takes code written in a source language, which is usually a high-level language, and transforms it into a target language, often object code or machine code.
 In the toolchain that transforms high level code to machine code, there also are other, compile-related programs, which may or may not work together with a compiler:
@@ -327,4 +328,154 @@ A grammar is L-attributed iff:
 that means that all attributes can be calculated if the previous nonterminals had all their attributes fixed.
 This allows the parser to fix all attributes in a left-right traversal for an L-attributed grammar.
 Any S-attributed grammar is L-attributed.
+
+\section{Symbol Tables}
+The symbol table is the most important inherited attribute of the compilation process, and the second most important artifact after the syntax tree.
+As it is used many times during the compilation the underlying data structure of the symbol table is very important.
+Its general appearance as a data structure is that of a dictionary (key-value pairs and stuff) and it needs to know three fundamental operations: \emph{insert}, \emph{delete} and \emph{lookup}.
+Possible candidates for the data structure are simple linear lists, which have constant insert time but linear lookup and delete time, tree structures (in any n-ary form, b-trees, etc...), which have really nice lookup and insert times but complex deletes, and hash tables, which are just perfect for dictionaries if you are not super limited in space.
+Hash tables give us (almost) constant performance for all three operations.
+
+\subsection{Hash Tables}
+For those who don't remember the structure of a hashtable I will repeat it very quickly.
+All you do is allocate an array of constant size, ideally larger than the amount of data required by some magical factor (you should be able to find formulas and lecture material on it).
+Then all you need is a way of distributing your indices (the keys of the dictionary) evenly across the entire range.
+We achieve this by what we call a hash function.
+Now, this hash function does not have to be a cryptograhic hash, and it doesn't even have to be chaotic.
+All it has to do is provide an even distribution of the indices over the range of the array, with as little collisions as possible.
+For this reason, the perfect hash function for our data is domain specific, but we don't know that function beforehand.
+So, we just take some way of converting arbitrary keys to integers which gives us not too many collisions while being reasonably fast (and in compilers reasonably means as fast as possible).
+For example you could use the Horner schema to generate an integer from the identifier string.
+After you have the hash (of which you take the modulo with your index range in order to avoid having to look for segfaults for hours), you save your data at that index.
+This gives you a data structure with constant insert, delet, and lookup time, as all you have to do is calculate the hash to get the index.
+Amazing right?
+
+Now, please put your throbbing erections away for a second, because we still have one problem to deal with: what to do if we get a collision.
+There are two fairly simple solutions to this problem.
+The first is not saving the data at the index directly, but instead saving a linked list there and putting our data in there.
+This is called \textbf{separate chaining}.
+Alternatively we can just look for an empty space in our hashtable somewhere else, which gives us less memory overhead, but increases the average distance of indices and hashes.
+This is known as \textbf{open addressing}.
+
+\subsection{Declarations and Scope}
+Now it's time to figure out what to put in our symbol table.
+For constant declarations we can put the value in our symbol table.
+Sometimes there is also a separate constant table for this, but its structure is very similar to the symbol table.
+For type declarations we add the alias and possbily the memory layout of objects in the symbol table (the lecture slides only mention the alias, the rest is just my common sense).
+For procedure and function declarations we can store the parameter and return value types.
+And finally, in some languages you can have implicit declaration by use (just like the C/C++ compiler warning you of an implicit function declaration if you get parameters wrong), which also need to be added to the symbol table.
+As you can probably imagine, these different value types for the symbol table might require multiple actual tables in the background, but we usually only consider one abstract table for our purposes.
+
+\subsubsection{Scope and Lifetime}
+Two very important but usually implicit declaration parameters that need to be stored in the symobl table are scope and lifetime.
+The scope tells us in which context it is legal to use a variable, and this is usually solved by having different symbol tables for different scopes (e.g. for different functions and a global symbol table).
+If a variable is referenced it is first searched in the symbol table of the samllest surrounding scope, and this search is then gradually exetended outward, until the variable is either found, or until it is declared nonexistant (the bahaviour in this case depends on the language).
+
+The lifetime of a variable tells us how long the memory for it has to be allocated, and when it can be freed.
+This is not very important for variables that live on the stack, as that memory is freed automatically as the program leaves the function the stack frame belonged to, but for heap variables this is something that has to be kept in mind.
+The memory of stack variables needs to be freed as long as that variable is no longer valid.
+This is handled differently in different languages.
+Some have a garbage collector (e.g. Java), while others require the user to do this or face the consequences of memory leaks.
+Global variables have a lifetime that is independent of functions, and live as long as the program is running.
+\begin{keypointbox}
+	Almost all combinations of scope and lifetime are possible.
+	A variable can have function scope but global lifetime (see static function variables in C).
+\end{keypointbox}
+
+\subsubsection{Special Points}
+For many modern languages, runtime environments manage the memory, freeing the user from doing this.
+This has its benefits but brings its own problems, at it menas less control for the user.
+
+One small thing to note is also that \emph{extern} declarations in C do not allocate memory anywhere.
+The program will simply fail if no memory location is known for the declared variable or function.
+
+\subsection{Block Structured Languages}
+Most modern programming languages are organized in blocks.
+A block is any area that can contain declarations (e.g. any area in brackets for C).
+In these languages, every block is a new level of scope, and blocks can also be nested.
+Variables declared in a block are valid in this block's scope, and all nested block's scope.
+Also, they are always added to the most closely nested block's symbol table (the one containing the declaration).
+
+For languages that require declare before use, the symbol table can be built during parsing.
+For others, it requires a separate pass.
+Symbol tables of nested scopes can contain a reference to the directly containing scope to decrease lookup time.
+The symbol table can also be released upon leaving the scope, which removes the need for delete operations.
+This can sometimes prevent reusing uninitialized values (however the memory of the new table might still contain garbage), and reduces the time required upon leaving the scope.
+Using linked symbol tables also allows redaclaration of variables at a different scope, which is usually a desired property.
+
+\subsubsection{Same-Level Declarations}
+Declaring the same variable multiple times at the same level is illegal.
+However, for many script languages that have no strict typing there is no syntactic difference between declaration and assignment.
+This forces them to allow "redeclaration" of varibables, although it is really only an assignment that changes the type of the variable.
+
+The way that multiple declarations are processed is also different between languages.
+Some languages use \textbf{sequential declaration}, which means they process one declaration after the other, adding variables to the symbol table as they go.
+Another variant is \textbf{collateral declaration} which means that all declared variables for the current block are searched, processed and then added to the symbol table together.
+
+For \textbf{recursive declarations} the prototype has to be processed and added before the function body.
+Some languages require a forward declaration of the prototype.
+This is especially prevalent for mutually recursive functions (recursive functions that call each other).
+
+\subsection{Types and Type Checking}
+Type checking ensures that the program satisfies the type rules of the language.
+But before we can check types we need a definition of what a type is.
+A data type is a definition of an allowed set of values and some parameters ($\textbf{integer} \cup \{+,*\}$).
+
+Declarations also either specifiy a type explicitly or implicitly.
+An explicit type declaration should be clear, and implicit declarations usually use some kind of keyword like \emph{var}, \emph{auto}, or you use a scripting language that doesn't really declare types anyway.
+Implicit types need to be inferred from the content, and if they can't be, the compiler should throw an error.
+
+There usually are predefined types for languages, and most languages give the programmer the ability to add user types.
+When defining user types, we differentiate between simple types (like enums, or subrange types), and complex datatypes (structs, classes, ...).
+Declaring complex data types requires some type of \emph{type constructor} (which should just be the constructor itself). %TODO: ask what this really means
+
+\subsubsection{Recursive Data Structures}
+Recursive data structures are a special case for symbol tables, as they need to be added to the symbol table before they can be completely processed.
+As an example, think of a simple implementation of a tree structure.
+The tree is built up of nodes, and a node needs to reference its children.
+Because we can't create a new type for every child, the children must be of the same type as the parent, and therefore this type needs to be used before it is finished.
+As we can't copy the cild into the parent by value, because that would give us data structures of variable size, we need to either store them by a reference or a pointer (which are essentially the same thing).
+
+\subsubsection{Type Equivalence}
+We often need to check whether two expressions have the same type, in order to see if an assignment is legal or not.
+For this we have three methods:
+\begin{itemize}
+	\item \textbf{Structural equivalence}, which checks whether two types have the same memory layout, and syntax tree.
+		This can lead to some quite funky shenanigans, due to reinterpretation of memory, but can be used for cases where no type names are available.
+	\item \textbf{Name equivalence}, which checks if both types have the same declared name and simple type (I think pointers count too).
+		This is easier to evaluate, but requires type names to be added to the symbol table.
+		Also, the compiler must generate a unique internal name for every declaration.
+	\item \textbf{Declaration equivalence}, which equates every type name to \emph{base type name}, which is either a predefined type or a type expression.
+		This requires the symbol table to support an operation which gets the base type for a given type.
+\end{itemize}
+
+\begin{keypointbox}
+	Declaration equivalence only creates type aliases, and is just fucked up.
+	C uses declaration equivalence for simple types, and structural equivalence for stucts and unions.
+\end{keypointbox}
+
+Using this type equivalence, we can create a type checker.
+
+\subsection{Polymorphism}
+Polymorphism, as opposed to \emph{Monomorphism} allows variables to have multiple types at once.
+The benefits and shapes of polymorphism are not part of this lecture.
+Two parts of it that are relevant for this lecture are \emph{overloading} and \emph{templates}.
+
+\subsubsection{Overloading}
+Overloading is the use of the same operator for multiple operations (e.g. the operator $+$ is used for integer and float addition).
+Some languages allow programmers to overload user functions.
+This requires the symbol table to include types as parameters for the lookup for function declarations.
+
+\subsubsection{Type Conversion and Coercion}
+Type rules can be extended to allow the conversion between data types.
+Most languages supply this capability for simple types, but some also allow the programmer to create new conversion rules, especially for user defined types.
+
+Type coercion is when the compiler or runtime environment supplies this mechanism implicitly (as opposed to e.g. casting in C).
+Languages that support user defined types and polymorphism usually follow the subtype principle, where every subtype can be coerced to a supertype (as it is a more specific variant of the supertype).
+This principle is the main point of contact that most programmers have with polymorphism.
+
+\subsubsection{Templates}
+Templates (also sometimes called generics, depending on the language), are \emph{type parameters}, which allow the definition of functions where the parameter types aren't fixed in the declaration.
+However, they usually can be restricted to subtypes of a common supertype, which requires the type checker to perform elaborate pattern matching.
+
 \end{document}
