@@ -451,7 +451,7 @@ For this we have three methods:
 
 \begin{keypointbox}
 	Declaration equivalence only creates type aliases, and is just fucked up.
-	C uses declaration equivalence for simple types, and structural equivalence for stucts and unions.
+	C uses declaration7;57M7;57m equivalence for simple types, and structural equivalence for stucts and unions.
 \end{keypointbox}
 
 Using this type equivalence, we can create a type checker.
@@ -477,5 +477,83 @@ This principle is the main point of contact that most programmers have with poly
 \subsubsection{Templates}
 Templates (also sometimes called generics, depending on the language), are \emph{type parameters}, which allow the definition of functions where the parameter types aren't fixed in the declaration.
 However, they usually can be restricted to subtypes of a common supertype, which requires the type checker to perform elaborate pattern matching.
+
+\subsection{Intermediate Representeations}
+Intermediate representations (IR) are used in compilers in order to make some operations easier.
+They reduce the number of actual compilers needed to be written for multi-language or multi-platform compilers.
+Additionally, a nice IR makes code optimization much easier than optimizing the source or target code.
+
+There exist many IRs, and they are grouped in high-level, low-level, and those in between.
+Some compilers also use more than one IR (for different purposes).
+
+\subsubsection{Three-address Code}
+This is a low level IR that is very close to (platform independent) Assembler.
+You might think that doing anything in Assembler can't be easier than doing it differently, but for a platform independent IR it is quite nice.
+Three address-code is also somehow much less tedious than Assembler, which makes you wonder why we don't use it instead of Assembler in the first place.
+The answer to this is: because the different Assembler dialects were there first.
+\Cref{fig:tac} shows an annotated example of three-address code.
+
+\fig{h}{}{tac}{Three-address Code}
+
+Three-address code also follows a very computational logic-y design, in that it is designed like a binary tree.
+The general approach is that it's easy to generate code for an expression if you can generate code for its subexpressions.
+However, this code is not necessarily optimal (or even fast), but we can mitigate this by optimizing the IR code.
+
+\begin{keypointbox}
+	Three-address code is to Assembler what Python is to Java (sort of).
+	It's less of a hassle, but doing things naively is way slower.
+	This is why we optimize our IR code.
+\end{keypointbox}
+
+Three-address code is generally implemented in one of three ways:
+\begin{itemize}
+	\item \textbf{Quadruples:} Here you store the two arguments, the operator and the target.
+		This means that the compiler can shuffle operations around easily, but that the targets need to be entered into symbol tables.
+		The representation also requires a bit more space.
+		\Cref{fig:quadruples} shows some example code.
+	\item \textbf{Triples:} Here we only store the arguments and the operators.
+		The targets are given by the index of the current operation.
+		This makes shuffling a bit harder for the compiler, but saves space, and doesn't require a symbol table.
+		\Cref{fig:triples} shows the same example as before.
+	\item \textbf{Indirect Triples:} Here the execution order is stored separately from the actual operations, just like a database table with a foreign key.
+		This makes shuffling easier while still not needing a symbol table.
+		However, the data structure complexity and memory requirement is larger than for straight triples.
+		\Cref{fig:indirect} shows an example.
+\end{itemize}
+
+\fig{h}{}{quadruples}{A three address code implementation using quadruples}
+\fig{h}{}{triples}{A three address code implementation using triples}
+\fig{h}{}{indirect}{A three address code implementation using indirect triples}
+
+\subsection{Basic Blocks}
+A basic block (BB) is a sequence of intermediate statements which are always executed together.
+This requires a BB to not contain any branching statements (jumps), except for the last statement.
+BBs are used for analysis and optimizations that are sensitive to control flow, as they are the control flow can only jump between BBs.
+
+A BB starts with a leader, which is one of the following:
+\begin{itemize}
+	\item the first statement in the program
+	\item the target statement of a jump
+	\item the statement following a jump
+\end{itemize}
+A BB then goes from each leader up to (but not including) the next leader.
+\Cref{fig:bbs} shows an example.
+
+\fig{h}{}{bbs}{An example of basic blocks}
+
+\subsection{Beyond Three-address Code}
+There are quite a few more intermediate representations.
+One example is the IR used in the LLVM compiler, which sits somewhere between high and low level.
+It is very similar to Assembler in some aspects, but also already allows for the definition of functions, has types, and is all around a pretty nifty thing.
+I included an example in \Cref{fig:llvm}.
+
+\fig{h}{}{llvm}{An example of LLVM IR code}
+
+\subsubsection{Implementing IR}
+Low level IR is fairly straightforward to implement (represent in memory, not generate target code from), as it is close to machine language and consists mostly of simple mechanisms anyway.
+More high level IRs also usually contain constructs that are a bit more tricky to implement, like functions and the like.
+For this you convert the AST into a logical control flow tree, which is physically implemented using node sharing.
+This makes the representation conservative on memory, but slightly trickier to implement.
+But you should be fine, you have are in the Master's Programme after all ;)
 
 \end{document}
