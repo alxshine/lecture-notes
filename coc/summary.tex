@@ -478,7 +478,7 @@ This principle is the main point of contact that most programmers have with poly
 Templates (also sometimes called generics, depending on the language), are \emph{type parameters}, which allow the definition of functions where the parameter types aren't fixed in the declaration.
 However, they usually can be restricted to subtypes of a common supertype, which requires the type checker to perform elaborate pattern matching.
 
-\subsection{Intermediate Representeations}
+\subsection{Intermediate Representations}
 Intermediate representations (IR) are used in compilers in order to make some operations easier.
 They reduce the number of actual compilers needed to be written for multi-language or multi-platform compilers.
 Additionally, a nice IR makes code optimization much easier than optimizing the source or target code.
@@ -548,6 +548,16 @@ It is very similar to Assembler in some aspects, but also already allows for the
 I included an example in \Cref{fig:llvm}.
 
 \fig{h}{}{llvm}{An example of LLVM IR code}
+
+\subsubsection{Static Single Assignment Form}
+Static Single Assignment Form (shortened to SSA) is a property of intermediate representations.
+In this form, every name is defined by exactly one operation or expression, and every operand referes to exactly one definition.
+To reconcile principles when branches meet, we add subscripts for uniqueness and insert $\phi$-functions at merge points.
+The $\phi$-functions choose one of its operands based on the taken execution path.
+\Cref{fig:ssa} shows what this means.
+In the actual output code, the $\phi$-function is simply the reuse of the same register, which is written to by only one taken path.
+
+\fig{h}{0.5}{ssa}{An example reconciliation in SSA using a $\phi$-function}
 
 \subsubsection{Implementing IR}
 Low level IR is fairly straightforward to implement (represent in memory, not generate target code from), as it is close to machine language and consists mostly of simple mechanisms anyway.
@@ -637,6 +647,27 @@ $b_1,b_2,\dots,b_n$ is a path iff:
 
 \fig{h}{0.7}{path}{The longest path in the example CFG}
 
+\subsection{Dominators}
+\emph{In a flow graph, $x$ dominates $y$ iff every path from the entry of the control-flow to the node $y$ includes $x$.}
+By definition $x$ dominates $x$.
+We call the set of dominators for a node DOM and DOM($x$) always contains at least one element ($x$).
+
+For any node $x$ there must be a $y \neq x$ in DOM($x$) closest to $x$, unless $x=n_0$ ($x$ is the first node in the flow graph).
+We call $y$ the \emph{immediate dominator} of $x$, and the notation is $y=$IDOM($x$).
+The \emph{Dominator Tree} is then drawn by connecting every node to its immediate dominator.
+
+\subsubsection{Calculating Dominators}
+A node $n$ dominates $m$ iff it is on every path from $n_0$ to $m$.
+We can calculate DOM by iteratively appling the following equation:
+\begin{equation}
+	\textup{DOM}(n) = \{n\} \cup (\cap_{p \in \textup{preds}(n)} \textup{DOM}(p))
+\end{equation}
+with $\textup{DOM}(n_0) = {n_0}$.
+By just applying this equation to all nodes until DOM set changes we will be guaranteed to get a result.
+\Cref{fig:domtree} shows an example of CFG and dominator tree, with DOM and IDOM for every node.
+
+\fig{h}{0.8}{domtree}{A CFG with DOM, IDOM and dominator tree}
+
 \section{Optimization Techniques}
 Here I will cover the different optimization techniques discussed in the lecture.
 
@@ -648,7 +679,7 @@ Redundant expressions are defined as follows:
 This means that if an expression is redundant we can remove the current evaluation and replace it with a reference.
 In order to do so, we first need to prove that the expression is really redundant, and then rewrite the code to eliminate the redundant evaluation.
 
-\subsubsection{Local Value Numbering}
+\subsubsection{Local Value Numbering (LVN)}
 The key idea behind proving the fact that an expression is really redundant is assigning an identifying \emph{value number} $V(n)$ to each expression.
 $V(x+y) = V(j)$ iff $x+y$ and $j$ always have the same value.
 
@@ -657,14 +688,14 @@ For the basic block you start with an empty hash table.
 Then you process expression by expression, calculating the hash $\left<op,V(arg_1),V(arg_2)\right>$ for every expression $e$.
 If the hash is already contained in the hash table, you replace $e$ with a reference (the value for the hash key), otherwise add the hash and calculate the result.
 If $arg_1$ and $arg_2$ are constants, evaluate and replace $e$ with the immediate.
-\Cref{fig:lvn} shows an example, and the largest potential issue of local value numbering.
+\Cref{fig:lvn} shows an example, and the largest potential issue of LVN.
 This issue can be avoided by renaming, as shown in \Cref{fig:lvn2}.
 As \Cref{fig:lvn2} states, this issue is avoided by the immutability of SSA variables.
 
-\fig{h}{}{lvn}{An example of local value numbering without renaming}
-\fig{h}{}{lvn2}{An example of local value numbering with renaming}
+\fig{h}{}{lvn}{An example of LVN without renaming}
+\fig{h}{}{lvn2}{An example of LVN with renaming}
 
-Local value numbering (and value numbering in general) can be extended to also fold constants by including an information bit that records when a value is constant.
+LVN (and value numbering in general) can be extended to also fold constants by including an information bit that records when a value is constant.
 If it is constant the expression can be evaluated at compile time and replaced with a load immediate or an immediate operand.
 There is no stronger local algorithm.
 
@@ -672,30 +703,43 @@ Algebraic identities can also be handled by this, but potentially many different
 For this a tree can be used to increase lookup efficiency.
 If an identity is found, the result can be replaced by the input value number.
 
-\paragraph{Safety of Local Value Numbering} is always given, because the hash table starts empty and is filled as expressions are processed.
+\paragraph{Safety of LVN} is always given, because the hash table starts empty and is filled as expressions are processed.
 If the value number for an expression is found in the table, it has been computed (at least once) before and can be referenced.
 Changing values are somewhat problematic, but as long as the target temporary for the original expression $e$ is still valid, all expressions $e'$ can reference it without a problem.
 This holds true for basic blocks, because if any statement executes, they all execute, in a predetermined order.
 For areas larger than basic blocks this analysis becomes a bit more complex.
 
-\paragraph{Profitability of Local Value Numbering} is given if reuse is cheaper than re-computation.
+\paragraph{Profitability of LVN} is given if reuse is cheaper than re-computation.
 Reuse is only cheaper if it does not cause a memory page spill or copy (which is expensive), but in practice this is often assumed to be true.
 Local constant folding is always profitable, because loading an immediate uses a register, just like recomputation, but loading an immediate operand saves even that.
 The profitability of algebraic identities is given if we can eliminate an entire operation.
 If not, it depends on the architecture and the speed of different operations.
 
-\paragraph{Opportunities for Local Value Numbering} are found by linearly scanning each basic block in execution order (ie. no backtracking).
+\paragraph{Opportunities for LVN} are found by linearly scanning each basic block in execution order (ie. no backtracking).
 Each operation needs to be considered as an opportunity for expression elimination, constant folding/propagation and algebraic identity transformation.
 The cost for this can be reduced by multiple techniques.
 Using a hashtable for the value numbers reduces the complexity of the lookup to $\mathcal{O}(1)$ per operand and operator, and algebraic identity lookups can be sped up by using trees for identities.
 
-\subsubsection{Superlocal Value Numbering}
-Local value numbering misses many opportunities for eliminating redundant expressions.
+\subsubsection{Superlocal Value Numbering (SVN)}
+LVN misses many opportunities for eliminating redundant expressions.
 \Cref{fig:missedops} shows the missed elimination opportunities in the example CFG from \Cref{cfg}.
 
 \fig{h}{0.7}{missedops}{The missed elimination opportunities in the example CFG from \Cref{cfg}}
 
-Superlocal value numbering works by applying the same algorithm as local value numbering to every path in the EBB.
+SVN works by applying the same algorithm as LVN to every path in the EBB.
 The hash tables are then not emptied for every basic block, but reused for the entire path.
 However, this method still misses quite some opportunities for elimination.
+
+\subsubsection{Dominator Value Numbering (DVN)}
+We want to decide which facts are true for the current basic block, but that information depends on the taken execution path.
+The dominators however give us information on things that \textbf{always} happen before the current block.
+
+So, in order to make use of even more opportunities, we can apply SVN, retaining the use of scoped hash tables in the path, and start each node with the table of its IDOM.
+Unfortunately, still no values flow back along edges (around loops), leading to quite a few missed opportunities.
+Constant folding and algebraic identities can be applied as before.
+
+DVN finds more redundancy than SVN, but still misses some opportunities and does not remove loop carried constant expressions.
+
+\subsection{Data Flow Analysis}
+
 \end{document}
