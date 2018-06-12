@@ -556,4 +556,146 @@ For this you convert the AST into a logical control flow tree, which is physical
 This makes the representation conservative on memory, but slightly trickier to implement.
 But you should be fine, you have are in the Master's Programme after all ;)
 
+\section{Optimization Theory}
+Optimization is probably the most complex phase of the compiler, and the one with the most ongoing research.
+It is meant to improve the performance of the code in one (or a combination) of the non-functional parameters, like execution time, memory usage etc. (the functional parameter being the correctness of the result).
+
+\subsection{Optimization Classification}
+Optimizations can be split into two major categories: \emph{machine dependent} and \emph{machine independent}.
+The border between the two is sometimes not clear cut, as machine independent techniques can have special cases based on the individual platform.
+The main trends in architecture are machine dependent, like instruction level parallelism (ILP) and memory access or pipeline optimization.
+There are however some machine independent optimizations, which are applicable to all platfroms, like eliminating redundant work, or using less expensive operations through arithmetic transformation.
+
+Optimization can also be split into categories based on the level at which they are performed: \emph{source level}, \emph{high/mid/low-level IR level}, and Assembler/machine code level.
+
+\subsection{Optimization Scope}
+Different optimization techniques operate on different scopes.
+The simplest scope is \emph{local}, which means the technique operates on a single basic block.
+The next larger scope is \emph{regional}, meaning multiple blocks but less than a procedure.
+Unintuitively named, \emph{global} or \emph{intraprocedural} techniques operate on entire procedures.
+Finally, \emph{interprocedural} or \emph{whole-program} techniques do operate on two or more procedures, the entire program.
+
+\subsection{Analysis and Transformation}
+An optimization pass is actually split into two phases: \emph{analysis} and \emph{transformation}.
+The analysis finds places and ways to apply an optimization, the transformation then actually changes the code.
+Local techniques can interleave analysis and transformation steps, due to the defined order of statement execution in basic blocks.
+Larger regions require the entire analysis to finish before a transformation can be made.
+Also, the transformation may invalidate previously performed analyes.
+
+\subsection{Qualities of an Optimization}
+The three main qualities of an optimization are \emph{safety}, \emph{profitability} and \emph{opportunity}.
+We want our optimizations to preserve the result of the computation, actually speed up the computation, and be efficient in candidate location and application.
+
+\subsubsection{Safety}
+\textbf{Safety is the most important aspect of an optimization.}
+If the "meaning" of the code is not preserved, the compiler is worthless.
+In theory observational equivalence means the following:
+\emph{Two expressions $M$ and $N$ are \textbf{observationally equivalent} iff in any context $C$ where both $M$ and $N$ are closed (all their variables are fixed), evaluating $C\left[M\right]$ and $C\left[N\right]$ either produces identical results or neither terminates.}
+Above statement should be fairly clear if you think about it for a bit, but if not, just keep in mind that $M$ and $N$ must produce the same result whenever both are closed (they have no free variables).
+
+As this statement is too broad for practical use, we reduce this to observational equivalence in their \emph{actual program context}.
+Optimization gets easier the more context is given, and a lack of context leads to very general (ie. slow) code.
+
+\subsubsection{Profitability}
+The compiler only needs to apply optimizations when it actually helps the non-functional parameters.
+As the desired combination of non-functional parameter performances can be complex, so can deciding on the profitability of an optimization.
+In some cases, profitability can be proven (e.g. constant folding), sometimes we have a good guess (pulling loop invariants out of the loop), and sometimes we can't tell easily (function inlining).
+
+The compiler oftenn uses heuristicts to reach conclusions on the question of profitability.
+
+\subsubsection{Opportunity}
+Before it can perform an optimization, the compiler first needs to find the places in the code where the transformations can be applied.
+Ideally, we would want the compiler to check every possible location, but this is not feasible with desired compile times.
+How to specify and locate optimization opportunities efficiently is a big issue.
+Some analysis forms do look at every single operation, but in a very fast and efficient manner, while others perform more in-depth analysis only on parts of the code.
+
+\subsection{Control Flow Graph}
+\label{cfg}
+In order for control flow analysis we need to understand the control flow graph.
+The nodes in the control flow graph are basic blocks, and the edges are branches.
+The different paths from the first to the last node are then the different execution paths of the covered part of the program.
+\Cref{fig:cfg} shows an example.
+
+\fig{h}{0.7}{cfg}{An example control flow graph}
+
+Control flow graphs also give rise to the definition of \emph{Extended Basic Blocks} (EBBs):
+\begin{itemize}
+	\item An EBB is a tree of BBs $b_1,b_2,\dots,b_n$
+	\item $b_1$ can have any number of predecessors
+	\item All other $b_i$ have a single unique predecessor (but possibly multiple exits)
+	\item The EBB is only entered at the root
+\end{itemize}
+In \Cref{fig:cfg} \{A,B,C,D,E\}, \{F\} and \{G\} are EBBs.
+
+An EBB contains 1 or more paths.
+$b_1,b_2,\dots,b_n$ is a path iff:
+\begin{itemize}
+	\item For all edges $(a, b_i)$ in the CFG $a=b_{i-1}$
+	\item $b_i$ has 1 predecessor: $b_{i-1}$
+\end{itemize}
+\Cref{fig:path} shows the longest path in the example CFG.
+
+\fig{h}{0.7}{path}{The longest path in the example CFG}
+
+\section{Optimization Techniques}
+Here I will cover the different optimization techniques discussed in the lecture.
+
+\subsection{Redundant Expression Elimination}
+The easiset way to optimize code is by eliminating redundant expressions.
+Redundant expressions are defined as follows:
+\emph{An expression $x\ (op)\ y$ is redundant iff it has already been evaluated along every execution path from the procedure's entry and the operands have not been redefined since.}
+
+This means that if an expression is redundant we can remove the current evaluation and replace it with a reference.
+In order to do so, we first need to prove that the expression is really redundant, and then rewrite the code to eliminate the redundant evaluation.
+
+\subsubsection{Local Value Numbering}
+The key idea behind proving the fact that an expression is really redundant is assigning an identifying \emph{value number} $V(n)$ to each expression.
+$V(x+y) = V(j)$ iff $x+y$ and $j$ always have the same value.
+
+An implementation of this can be very simple.
+For the basic block you start with an empty hash table.
+Then you process expression by expression, calculating the hash $\left<op,V(arg_1),V(arg_2)\right>$ for every expression $e$.
+If the hash is already contained in the hash table, you replace $e$ with a reference (the value for the hash key), otherwise add the hash and calculate the result.
+If $arg_1$ and $arg_2$ are constants, evaluate and replace $e$ with the immediate.
+\Cref{fig:lvn} shows an example, and the largest potential issue of local value numbering.
+This issue can be avoided by renaming, as shown in \Cref{fig:lvn2}.
+As \Cref{fig:lvn2} states, this issue is avoided by the immutability of SSA variables.
+
+\fig{h}{}{lvn}{An example of local value numbering without renaming}
+\fig{h}{}{lvn2}{An example of local value numbering with renaming}
+
+Local value numbering (and value numbering in general) can be extended to also fold constants by including an information bit that records when a value is constant.
+If it is constant the expression can be evaluated at compile time and replaced with a load immediate or an immediate operand.
+There is no stronger local algorithm.
+
+Algebraic identities can also be handled by this, but potentially many different identities may need to be checked.
+For this a tree can be used to increase lookup efficiency.
+If an identity is found, the result can be replaced by the input value number.
+
+\paragraph{Safety of Local Value Numbering} is always given, because the hash table starts empty and is filled as expressions are processed.
+If the value number for an expression is found in the table, it has been computed (at least once) before and can be referenced.
+Changing values are somewhat problematic, but as long as the target temporary for the original expression $e$ is still valid, all expressions $e'$ can reference it without a problem.
+This holds true for basic blocks, because if any statement executes, they all execute, in a predetermined order.
+For areas larger than basic blocks this analysis becomes a bit more complex.
+
+\paragraph{Profitability of Local Value Numbering} is given if reuse is cheaper than re-computation.
+Reuse is only cheaper if it does not cause a memory page spill or copy (which is expensive), but in practice this is often assumed to be true.
+Local constant folding is always profitable, because loading an immediate uses a register, just like recomputation, but loading an immediate operand saves even that.
+The profitability of algebraic identities is given if we can eliminate an entire operation.
+If not, it depends on the architecture and the speed of different operations.
+
+\paragraph{Opportunities for Local Value Numbering} are found by linearly scanning each basic block in execution order (ie. no backtracking).
+Each operation needs to be considered as an opportunity for expression elimination, constant folding/propagation and algebraic identity transformation.
+The cost for this can be reduced by multiple techniques.
+Using a hashtable for the value numbers reduces the complexity of the lookup to $\mathcal{O}(1)$ per operand and operator, and algebraic identity lookups can be sped up by using trees for identities.
+
+\subsubsection{Superlocal Value Numbering}
+Local value numbering misses many opportunities for eliminating redundant expressions.
+\Cref{fig:missedops} shows the missed elimination opportunities in the example CFG from \Cref{cfg}.
+
+\fig{h}{0.7}{missedops}{The missed elimination opportunities in the example CFG from \Cref{cfg}}
+
+Superlocal value numbering works by applying the same algorithm as local value numbering to every path in the EBB.
+The hash tables are then not emptied for every basic block, but reused for the entire path.
+However, this method still misses quite some opportunities for elimination.
 \end{document}
