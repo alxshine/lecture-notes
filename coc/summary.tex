@@ -909,4 +909,92 @@ We repeat this until we can find a scheduling that works.
 After we found a scheduling for the kernel, we add the prologue and epilogue code, adding register copies if we need to.
 And then we're done, that wasn't too hard now, was it?
 
+\section{Register Allocation}
+Now that we have the target code, we only need to find a way to fit all operations into the registers we have.
+In order to reduce the number of registers we need to keep, we can use the liveness analysis covered earlier to find dead variables.
+The basic idea is, if a value is not needed reuse the register, and if there are no more available registers, spill memory.
+Spilling memory is very expensive, as accessing RAM is \emph{so much more expensive} than using registers.
+Finding the best register allocation is an NP complete problem, so we use heuristics to reduce complexity.
+We also assume that code generation and instruction scheduling are both already finished.
+
+\subsection{Local Allocation}
+We first focus on basic blocks and map virtual registers to physical registers.
+The \emph{top-down} approach computes a priority of virtual registers with the most important ones being allocated first.
+The ones that don't fit are just spilled.
+This technique has poor performance as virtual registers blocka physical register for the entire scope.
+
+The \emph{bottom-up} approcah iterates over the instructions in a block, allocating on demand.
+It frees a register if the containing value is no longer needed (liveness), and uses the distance to next use as a spill metric.
+
+\begin{keypointbox}
+	When spilling a value, it is better to spill a \emph{clean} value (one that was not changed after loading), rather than a \emph{dirty} one (one that was changed).
+	This saves us a store operation, as we can just load the pristine value later on.
+	However, it can be better to spill dirty values, based on usage.
+	This is another NP-complete problem.
+\end{keypointbox}
+
+\subsection{Global Register Allocation}
+As local allocation does not consider the reuse of values across multible BBs, it leads to suboptimal results.
+To handle register usage across BBs, we assign registers to \emph{live ranges} instead of variables or values.
+A live range is the range of instructions between the definition and last use of a variable.
+We then perform live variable dataflow analysis to track live variables across blocks, and only allocate registers for live variables.
+
+As this can be used just as well for local allocation, global register allocation makes no difference between local and global.
+An \emph{interference graph} is constructed from live variables, with neighbors being variables live at the same time (intersecting live ranges with different values).
+We then try to color this graph in $k$ different colors (with $k$ being the number of available registers), with no neighbors having the same color.
+If the graph needs more than $k$ colors, we need to spill.
+After finishing, we can directly map the colors to physical registers.
+
+As graph coloring is another NP-complete problem, we need heuristics to "solve" this efficiently.
+
+\subsubsection{Graph Coloring}
+We start with an important observation:
+\emph{Any node $n$ that has less than $k$ neighbors $|n| < k$ can always be colored}
+
+We then get a very simple algorithm:
+\begin{enumerate}
+	\item Pick any node $|n| < k$ and put it on the stack
+	\item Remove that node and its edges, reducing the degree of neighbors
+	\item If there are no nodes $|n| < k$, spill any node and continue
+	\item After all nodes are on the stack, pop them and color them one by one (considering neighbor's colors)
+\end{enumerate}
+
+\Cref{fig:coloring} shows an example of a colored interference graph.
+Note that there are cases where this algorithm does not find the best coloring (e.g. a diamond shaped interference graph is 2 colorable, but this algorithm does not find that solution).
+It is better than trying all combinations however.
+
+\fig{h}{0.6}{coloring}{A colored interference graph}
+
+\subsubsection{Spill Candidates}
+When spilling values we want to minimize the spill cost.
+The spill cost is the number of loads and stores needed for the spill.
+Also, the higher the degree of the node in the inteference graph, the more likely its spill is to benefit us.
+
+In cases where there is a load and store being made to the same location without any operations depending on it (the value not being used), the spill cost is negative.
+Spilling that value actually saves a load.
+
+For cases where spilling does not decrease the live range of a variable, the spill cost is infinite.
+
+\subsubsection{Alternatives to Spilling}
+Instead of spilling entire live ranges, we can also just spill the variable in areas of high register demand, called partial live ranges.
+
+We can also split live ranges with artificially induced stores and loads, splitting nodes in the interference graph and thus reducing their degree.
+If the splitting is smart, the spill can occur in "cheap" regions, leading to less stalling and a potentially higher usage of the pipeline.
+
+Finally, we can coalesce registers if they don't interfere, and are connected by a copy.
+This just means that instead of two nodes in the interference graph connected by a copy we now have one.
+
+\subsection{Coalescing}
+This is easiest shown on an example.
+In \Cref{fig:coalescing} $Ra$, $Rb$ and $Rc$ actually have the same value.
+$Ra$ and $Rb$ are combined into a single register, and we could do the same thing with $Rc$.
+
+\fig{h}{0.7}{coalescing}{An example of register coalescing}
+
+Coalescing \emph{generally} reduces the degree of the interference nodes, and is therefore often applied before coloring the interference graph.
+However, sometimes coalescing can \emph{increase} the degree of nodes, but this problem can be handled by checking if it actually helps before applying coalescing (called \emph{conservative coalescing}).
+This leads to iterative processing, which is just conservative coalescing and coloring applied in turn.
+
+\textbf{Alright, that was it. You're probably as glad to be done as I was when writing this.
+Now all that's left to say is good luck in the exam, I hope this summary helped.}
 \end{document}
