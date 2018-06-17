@@ -801,7 +801,7 @@ It also sometimes has difficulty handling control flow, as the IR control struct
 Superoptimization is a technique that some theoretical computer scientists came up with.
 They decided to use theorem provers with a set of axioms for equivalent instructions to find and prove an optimal set of generated instructions.
 This is exponentially complex, as all combinations have to be searched (the search space can be reduced, but its still very large).
-
+1;57M1;57m
 \subsection{Special Code Generation Targets}
 In addition to utilizing ILP possibilities for RISC architectures, we sometimes are confronted with special architectures that require consideration in the compilation process.
 
@@ -820,5 +820,93 @@ This needs special consideration and is often handled by special techniques or e
 Automatic parallelization requires high-quality analysis, dependence information, knowledge of data structures and the details of individual hardware.
 With its complexity comes a huge benefit, making automatic parallelization a huge research topic in compilers.
 
+\section{Instruction Scheduling}
+With the increasing number of independent functional units (FUs) in modern processors, the order of instructions has a large influence on performance.
+We can hide the latency of instructions by scheduling other instructions in their shadow, thus keeping the pipeline filled.
+
+Additionally, modern architectures can execute multiple instructions in parallel, if their operands are available.
+The two main flavors of modern ILP are Superscalar architectures and VLIW.
+In its essence, superscalar architectures have different FUs for processing parts of an instruction (load, ALU, store, ...).
+This allows different parts of multiple instructions being executed at the same time (what we call a pipeline), just like starting work on a new instruction every cycle.
+VLIW (very long instruction word) architectures have explicit insructions for processing multiple operations at the same times.
+Both ILP families are dependent on the scheduling of operations, with VLIW needing explicit combination of instructions into a VLIW.
+
+The number of FUs and the number of registers dictates the way the instructions need to be scheduled for optimal ILP usage.
+For instruction scheduling we treat the number of registers as infinite, and deal with register allocation in a later step (this isn't optimal, but it's good enough and faster).
+\Cref{fig:superscalar} shows the difference good instruction scheduling can make.
+In this example we have 1 FU, so we can run a new instruction each cycle iff the operands are ready.
+Our delays are: load/store 3 cycles, mult 2 cycles, others 1 cycle.
+
+\fig{h}{}{superscalar}{The difference in needed CPU cycles for different instruction orderings}
+
+\subsection{List Scheduling}
+To determine a good schedule for local instructions (inside a BB) we first build a dependence graph.
+For this graph we connect each instruction to the instructions whose results it depends on, with the edge weights being the instruction delays.
+\Cref{fig:dependencygraph} shows an example with the corresponding code.
+We ignore anti dependencies (registers needing to be available) and just assume an unlimited number of registers.
+
+\fig{h}{}{dependencygraph}{Example code and the dependencygraph for it}
+
+Determining the best schedule from this graph is an NP complete problem, but we have a good heuristic approach.
+The algorithm for it is shown in \Cref{fig:listscheduling}.
+We can define the priority function as we need, making this algorithm very versatile.
+(For those interested in efficient algorithms, this is a nice application of a heap).
+
+\fig{h}{}{listscheduling}{The list scheduling algorithm in pseudocode}
+
+When using the algorithm from \Cref{fig:listscheduling} (using the remaining critical path length as priority) on the example shown in \Cref{fig:dependencygraph}, we get the result shown in \Cref{fig:scheduleresult}
+
+\fig{h}{}{scheduleresult}{The result when using critical path length as priority}
+
+We can use a lot of different metrics as a priority for list scheduling, like longest latency, last use of value, number of descendants, ...
+We can also combine multiple metrics into a custom priority function.
+
+\subsubsection{Forward- and Backward-Scheduling}
+We can start scheduling from the leaves (as shown in \Cref{fig:listscheduling}), or from the root.
+These different approaches might result in a difference in cycles or registers, but both should be pretty good, depending on the used metrics.
+
+\subsubsection{Superlocal Instruction Scheduling}
+It is possible to shift instructions between BBs.
+This can increase ILP usage, but requires compensation code.
+Moving instructions between BBs can be worth it, especially for control paths that are more often travelled than others.
+This is called \emph{Trace Scheduling} and requires recompilation of the program after it has been run (more on stuff like this in slidedeck chapter 11, which is not covered by this summary).
+
+\subsection{Loop Scheduling}
+As loops usually dominate the run time, optimizing their latency (and speed) is very crucial for program performance.
+Loop Unrolling can improve instruction scheduling, but increases register and cache pressure.
+For VLIW hardware we can also use a special technique called \emph{Software Pipelining} to increase loop performance.
+\Cref{fig:softpipeline} shows the example code that will be used for this section.
+
+\fig{h}{}{softpipeline}{The example code for this section}
+
+In software pipelining the instructions inside the loop are arranged in such a way that multiple instructions \emph{from different iterations} can be executed on the same cycle.
+This has the same effect as HW pipelining and branch prediction in superscalar architectures.
+For rearrangement we have to ensure the dependencies between the iterations are still fulfilled.
+\Cref{fig:dependencies} shows inter-iteration dependencies for the example code.
+
+\fig{h}{0.8}{dependencies}{Dependencies between iterations for the example}
+
+To achieve this, the loop code is split into a prologue (executed once before the target code loop), the kernel (which is the target code loop) and an epilogue (executed once at the end), as shown in \Cref{fig:split}.
+After this split, the target code is equivalent to the source code.
+We then apply \emph{modulo scheduling} on the kernel, splitting the operations over the cycles of the longest instruction shadow.
+\Cref{fig:scheduling} shows a more optimal scheduling for the loop in the example.
+
+\fig{h}{0.8}{split}{The loop code split into prologue, kernel, and epilogue}
+\fig{h}{0.8}{scheduling}{A more optimal scheduling for the example code}
+
+Now we only need to know how to apply modulo scheduling.
+To do this, we first need to calculate the \emph{initiation interval} (ii), which is bounded by the number of function units and recurrence distance (longest delay of an operation with dependents).
+A smaller ii means a smaller loop body, and therefore a faster loop.
+
+In the example we have 2 integer operations and 1 unit, giving us a minimal ii of 2.
+Also, the recurrences on $c$ have a delay of 1, giving us a minimal ii of 1.
+This means a combined ii of 2.
+
+We then apply modulo scheduling using our ii of 2 as the modulo, scheduling instructions from the kernel to the corresponding units in cycle 0, then cycle 1.
+If we have additional instructions, we try to schedule them in cycle 0 again.
+If we're not able to (because we have run out of units, or because of dependencies) we increase the ii and try again.
+We repeat this until we can find a scheduling that works.
+After we found a scheduling for the kernel, we add the prologue and epilogue code, adding register copies if we need to.
+And then we're done, that wasn't too hard now, was it?
 
 \end{document}
