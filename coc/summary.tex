@@ -730,16 +730,95 @@ SVN works by applying the same algorithm as LVN to every path in the EBB.
 The hash tables are then not emptied for every basic block, but reused for the entire path.
 However, this method still misses quite some opportunities for elimination.
 
-\subsubsection{Dominator Value Numbering (DVN)}
-We want to decide which facts are true for the current basic block, but that information depends on the taken execution path.
-The dominators however give us information on things that \textbf{always} happen before the current block.
+%\subsubsection{Dominator Value Numbering (DVN)}
+%We want to decide w2;38M2;38mhich facts are true for the current basic block, but that information depends on the taken execution path.
+%The dominators however give us information on things that \textbf{always} happen before the current block.
 
-So, in order to make use of even more opportunities, we can apply SVN, retaining the use of scoped hash tables in the path, and start each node with the table of its IDOM.
-Unfortunately, still no values flow back along edges (around loops), leading to quite a few missed opportunities.
-Constant folding and algebraic identities can be applied as before.
+%So, in order to make use of even more opportunities, we can apply SVN, retaining the use of scoped hash tables in the path, and start each node with the table of its IDOM.
+%Unfortunately, still no values flow back along edges (around loops), leading to quite a few missed opportunities.
+%Constant folding and algebraic identities can be applied as before.
 
-DVN finds more redundancy than SVN, but still misses some opportunities and does not remove loop carried constant expressions.
+%DVN finds more redundancy than SVN, but still misses some opportunities and does not remove loop carried constant expressions.
 
-\subsection{Data Flow Analysis}
+\begin{keypointbox}
+	The optimization stuff is incomplete.
+	I need to ask Peter about some things that are not entirely clear to me from the lecture notes, which I will do on Tuesday.
+	As I want to provide you with the best summary that I can give, I won't write about optimization until I have fully understood it.
+\end{keypointbox}
+
+\section{Code Generation}
+Now that we have (fairly) optimal IR code, we can start generating machine code for the target architecture.
+Obviously we want to generate the most efficient assembler code possible.
+To this end, in true divide-and-conquer fashion, we split the code generation into three phases: Code Generation \& Instruction Selection, Instruction Schedulig, and Register Allocation.
+In general, the problem of optimal code generation is NP-complete, but in practice we can find some good solutions based on heuristics.
+
+We also want to keep the generated code as portable as possible.
+While this is hard due to the inherently machine dependent nature of target code, we can help ourselves, as we will see later on.
+
+In most RISC architectures we can do the same thing in multiple different ways.
+As an example, registers can be copied using some different methods (with \emph{i2i} being the binary copy operator):
+\begin{itemize}
+	\item $i2i\ r1 \rightarrow r2$
+	\item $addI\ r1, 0 \rightarrow r2$
+	\item $lshiftI\ r1, 0 \rightarrow r2$
+\end{itemize}
+If different operators are assigned to different units in hardware, the selection of operators can have a huge impact on performance.
+Due to this, simply walking through the code and translating it line-by-line (as is done for generating IR code from the AST) is not the way to go.
+An example of this is shown in \Cref{fig:codegeneration}, with \emph{A} being code generated line by line, and \emph{B} being intelligently generated target code.
+
+\fig{h}{}{codegeneration}{A comparison of naively and intelligently generated target code}
+
+\subsection{Cost Based Code Generation}
+One way to generate target code based on the cost goes as follows:
+We add information on storage location (register or memory) to the AST, and then \emph{tile} the tree using the combination of operators and storage locations (the operator information is already implicitly stored in the AST).
+Tiling in this case means combining nodes in the AST into target code, with all nodes in a tile being combined into a \emph{single} statement.
+The tiling is done based on \emph{ambiguous} rewrite rules, which are dependent on the target instruction set and architecture.
+The rewrite rules are ambiguous to allow for multiple tilings, based on cost.
+s the output of one tiling is the input of the other (if they are adjacent in the AST), they need to agree on storage locations.
+As an example, I included the entire example slides in \Cref{fig:slideast} and \Cref{fig:slidetiling}.
+\Cref{fig:slideast} shows the AST and the rewrite rules, while \Cref{fig:slidetiling} shows the resulting tiling and target code.
+You can solve the question in \Cref{fig:slidetiling} yourself as an exercise.
+The main approach is repeatedly applying the rewrite rules.
+This causes the code generation to turn into a term rewrite problem, for which other people have well thought out algorithms.
+The cost of matching rewrite rules to tiles can be reduced by using lookup tables.
+
+\fig{h}{}{slideast}{The AST and rewrite rules}
+
+\fig{h}{}{slidetiling}{The resulting tiling}
+
+\begin{keypointbox}
+	This example considers all operations being equal cost.
+	For operations of different cost, there are techniques based on tree navigation.
+\end{keypointbox}
+
+\subsubsection{Peephole Optimization}
+As target code generation (and optimization) complexity grows superlinear with the number of analyzed lines, this is often done using sliding windows (just like the view through a peephole).
+This technique works very well with linear IR and gives good practical performance.
+Its performance is dependent on the window size, with the optimal window size not really being computable (but that didn't bother anyone for Neural Nets either).
+It also sometimes has difficulty handling control flow, as the IR control structures may be further apart then the sliding window can see.
+
+\subsubsection{Superoptimization}
+Superoptimization is a technique that some theoretical computer scientists came up with.
+They decided to use theorem provers with a set of axioms for equivalent instructions to find and prove an optimal set of generated instructions.
+This is exponentially complex, as all combinations have to be searched (the search space can be reduced, but its still very large).
+
+\subsection{Special Code Generation Targets}
+In addition to utilizing ILP possibilities for RISC architectures, we sometimes are confronted with special architectures that require consideration in the compilation process.
+
+\subsubsection{Embedded Code Generation}
+For embedded architectures the code must be adapted to the individual platform to be efficient.
+The number of registers, RAM speed etc. are very variable for this kind of target.
+Here our goal is minimizing hardware-specific changes rquired in the compiler for new hardware, whil still generating high-quality code.
+This also applies to very distinct and specialized hardware (e.g. heterogeneous instruction sets, coprocessors, ...).
+
+\subsubsection{Multimedia Code Generation}
+Standard Code Generation is completely blind to parallelism.
+Generating shorter code might severly restrict ILP in the architecture.
+
+Multimedia instructions (instructions executed on a highly parallel device like a GPU) are often Single Instruction Multiple Data (SIMD).
+This needs special consideration and is often handled by special techniques or even special compilers.
+Automatic parallelization requires high-quality analysis, dependence information, knowledge of data structures and the details of individual hardware.
+With its complexity comes a huge benefit, making automatic parallelization a huge research topic in compilers.
+
 
 \end{document}
