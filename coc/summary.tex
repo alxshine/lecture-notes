@@ -41,7 +41,7 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 
-\title{Physically Based Simulation}
+\title{Construction of Compilers}
 \author{Alexander Schlögl}
 
 \begin{document}
@@ -730,21 +730,104 @@ SVN works by applying the same algorithm as LVN to every path in the EBB.
 The hash tables are then not emptied for every basic block, but reused for the entire path.
 However, this method still misses quite some opportunities for elimination.
 
-%\subsubsection{Dominator Value Numbering (DVN)}
-%We want to decide w2;38M2;38mhich facts are true for the current basic block, but that information depends on the taken execution path.
-%The dominators however give us information on things that \textbf{always} happen before the current block.
+\subsubsection{Dominator Value Numbering (DVNT)}
+We want to decide which facts are true for the current basic block, but that information depends on the taken execution path.
+The dominators however give us information on things that \textbf{always} happen before the current block.
 
-%So, in order to make use of even more opportunities, we can apply SVN, retaining the use of scoped hash tables in the path, and start each node with the table of its IDOM.
-%Unfortunately, still no values flow back along edges (around loops), leading to quite a few missed opportunities.
-%Constant folding and algebraic identities can be applied as before.
+So, in order to make use of even more opportunities, we can apply SVN, retaining the use of scoped hash tables in the path, and start each node with the table of its IDOM.
+Unfortunately, still no values flow back along edges (around loops), leading to quite a few missed opportunities.
+Constant folding and algebraic identities can be applied as before.
 
-%DVN finds more redundancy than SVN, but still misses some opportunities and does not remove loop carried constant expressions.
+DVNT should only be applied in combination with SSA form IR code.
+This is due to the fact that changes to the operands in blocks between the IDOM and the current block can make this technique have incorrect results.
+In SSA form however, variables changed in multiple blocks are run through a $\phi$-function.
+This $\phi$-function causes the resulting variable to have a completely new value number, distinct from the value numbers of the variable in all previous blocks.
+The assignment of a new value number is by definition and is meant to avoid problems such as this, which are caused by uncertainty over the state of the variable.
 
-\begin{keypointbox}
-	The optimization stuff is incomplete.
-	I need to ask Peter about some things that are not entirely clear to me from the lecture notes, which I will do on Tuesday.
-	As I want to provide you with the best summary that I can give, I won't write about optimization until I have fully understood it.
-\end{keypointbox}
+DVNT finds more redundancy than SVN, but still misses some opportunities and does not remove loop carried constant expressions.
+The additionally eliminated expressions are shown in \Cref{fig:dvnt}.
+
+\fig{h}{0.8}{dvnt}{The expressions eliminated by DVNT, the results of $\phi$-functions have a different value numbers than the operands}
+
+\subsection{Data Flow Analysis}
+Data flow analysis is a collection of techniques for reasoning about the \emph{run-time flow} of values \emph{at compile time}.
+These techniques always operate on a graph.
+Problems are trivial on a single block, as the graph only has one node.
+Interprocedural problems use the call graph of the current function.
+Global problems use the control-flow graph of the program.
+Data flow problems are then formulated as simultaneous set equations, which can be solved easily by iterative algorithms.
+Note that I said easily, not quickly.
+
+Data flow analysis determine a property of the program, and we usually are interested in a \emph{meet over all paths} solution:
+\begin{itemize}
+	\item What is true on every path from the entry node?
+	\item Can this event happen on any path from the entry node?
+\end{itemize}
+The iterative solvers start with an approximate solution, which will converge to the exact solution in a finite number of iterations if equation is a lattice.
+
+\subsubsection{Semi-lattice}
+A semi lattice is a set $L$ and a meet operator $\wedge$ with $\forall a,b,c \in L$:
+\begin{align}
+	a \wedge a &= a\\
+	a \wedge b &= b \wedge a\\
+	a \wedge (b \wedge c) &= (a \wedge b) \wedge c
+\end{align}
+$\wedge$ imposes an order $a \geq b \leftrightarrow a \wedge b = b$ and also has a defined bottom element: $\bot \wedge a = \bot \rightarrow (a \geq \bot)$
+So, a lattice is just a set with an operator that has idempotence, is commutative, associative, defines an order and has a bottom element (e.g. set union with the largest set as bottom element).
+
+Lattices aren't really used for any technique covered in the lecture.
+However, I wanted to include the definition because knowing this might come in handy.
+
+\subsection{Computing Live Information}
+A value $v$ is live at $p$ iff there exists a path from $p$ to some use of $v$ along which $v$ is not redefined.
+This means that if the value of $v$ is read later on, without being rewritten before that, we need to keep the value of $v$.
+
+In data flow we use the sets $LIVEOUT$ and $LIVEIN$ for this:
+\begin{align}
+	LIVEOUT(b) &= \cup_{s \in succ(b)} LIVEIN(s)\\
+	LIVEIN(b) &= UEVAR(b) \cup (LIVEOUT(b) \setminus KILLED(b))\\
+	LIVEOUT(n_{|N|-1}) &= \emptyset
+\end{align}
+where $UEVAR(b)$ is the set of variables used in $b$ before being defined in $b$ (the variables that must exist before $b$ is executed), and $KILLED(b)$ is the set of variables defined in $b$.
+The lecture slides use $NOTKILLED$ instead of $KILLED$ which is just the inverse, but that only changes the operation between $LIVEOUT(b)$ and $NOTKILLED(b)$ from set difference to an intersection.
+
+A very simple algorithm to compute this is to update $LIVEIN$ and $LIVEOUT$ repeatedly, until the sets for no block have changed.
+This works, but is highly inefficient.
+The order of traversal also has a large impact on convergence speed, but finding the optimal order is NP-complete.
+
+\subsubsection{Worklist Algorithm}
+\Cref{fig:worklist} shows the pseudocode for the algorithm, which should be easy enough to understand.
+If $W$ does not contain duplicate (use your standard set implementation) this converges, as the number of possible additions to the sets (and therefore to the worklist) is finite.
+The equations for the sets are monotone (they are lattices, see above), and $UEVAR$ and $KILLED$ are costants for $b$.
+Also $LIVEIN$ and $LIVEOUT$ are finite sets.
+
+\fig{h}{0.6}{worklist}{The pseudocode for the worklist algorithm}
+
+\subsubsection{Using Live Information for Redundancy Elimination}
+Now that we know which variables and values are live, we can eliminate unneeded stores.
+As soon as a variable is not live anymore, we can reuse that register.
+To do this, we first solve $LIVEIN$ and $LIVEOUT$ for the blocks, and then compute local liveness incrementally from there.
+If the target of a store is not in the current $LIVE$ set, we can delete that store.
+If all stores are eliminated, we can delete the reserved space for it.
+
+This elimination is safe because if $x \notin LIVE(s)$ at the point of some store $s$, its value is not used without being written first.
+The safety of this technique relies on the correctness of $LIVE$.
+By searching the blocks linearly, for store operations, and computing $LIVE$ at every point $s$ of a store, and eliminating the store if possible, we can speed up the execution.
+This assumes that not doing the store costs less than doing it (which is almost always true).
+
+\subsection{Global Redundancy Elimination (GRE)}
+By calculating $AVAIL(b) = \cap_{p \in pred(b)} (DEEXPR(p) \cup (AVAIL(p) \setminus KILLED(p)))$, with $DEEXPR(b)$ being the subexpressions defined in $b$ and $KILLED(b)$ being the set of expressions killed in $b$.
+An expression is killed if one of its operands is changed.
+Computing this requires making some changes to the table that stores the expression references, in order to speed up our lookup.
+$DEEXPR$ and $KILLED$ can be calculated locally (again, the lecture uses $NOTKILLED$, but I think this is more concise).
+We initialize $AVAIL(b) = \emptyset$ and solve forwards (instead of backwards for $LIVEOUT$).
+\Cref{fig:avail} contains an example, including an exercise task.
+
+\fig{h}{}{avail}{An example of $AVAIL$ calculation}
+
+Applying GRE saves us from doing any redundant work, as shown in \Cref{fig:gre}.
+
+\fig{h}{0.7}{gre}{The result after applying GRE}
 
 \section{Code Generation}
 Now that we have (fairly) optimal IR code, we can start generating machine code for the target architecture.
@@ -786,11 +869,6 @@ The cost of matching rewrite rules to tiles can be reduced by using lookup table
 
 \fig{h}{}{slidetiling}{The resulting tiling}
 
-\begin{keypointbox}
-	This example considers all operations being equal cost.
-	For operations of different cost, there are techniques based on tree navigation.
-\end{keypointbox}
-
 \subsubsection{Peephole Optimization}
 As target code generation (and optimization) complexity grows superlinear with the number of analyzed lines, this is often done using sliding windows (just like the view through a peephole).
 This technique works very well with linear IR and gives good practical performance.
@@ -801,7 +879,6 @@ It also sometimes has difficulty handling control flow, as the IR control struct
 Superoptimization is a technique that some theoretical computer scientists came up with.
 They decided to use theorem provers with a set of axioms for equivalent instructions to find and prove an optimal set of generated instructions.
 This is exponentially complex, as all combinations have to be searched (the search space can be reduced, but its still very large).
-1;57M1;57m
 \subsection{Special Code Generation Targets}
 In addition to utilizing ILP possibilities for RISC architectures, we sometimes are confronted with special architectures that require consideration in the compilation process.
 
