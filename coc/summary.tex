@@ -234,39 +234,30 @@ There's really not much to it, but if you're still unsure, just look at the FLAT
 
 
 \section{Parsing}
-We apparently didn't cover parsing in the lecture (honestly I wasn't there all too often so I don't know).
-Accordingly, this chapter, as well as the sub-chapters top-down parsers and bottom-up parsers aren't part of the exam.
-As I did write some stuff on top-down and bottom-up parsing before I learned this, I still have some information on them.
-Including the whole sections was not sensible, but I did leave in the introductions to the subsections.
-Anyway, here it goes:
+Almost all of the parsing stuff from the lecture was covered in FLAT, which is a prerequisite for this course, so you should know that.
+I will only cover the parts not covered in FLAT, and maybe include some refreshers needed for that.
+The rest will only be included briefly, so you know what to look for.
 
-Parsing is the process of converting the token stream into a syntax tree.
-The syntax tree contains all syntactic blocks of the program (if, while, for, functions, ...), and in its structure contains their relations.
-It is constructed according to rules defined in a context free grammar (I think context-sensitive grammars would also be possible, but the lecture slides only talk about context free grammars).
-You should remember how CFGs work from FLAT, so I won't discuss them here (they were skipped in the lecture anyway).
+\subsection{Context Free Grammars (CFGs)}
+These are covered extensively in FLAT.
+The only thing might be the Backus-Naur-Form (BNF): $S \rightarrow A | b | Cd$.
+Derivations, parse-trees, derivation strategies are all things you should know.
+You can also probably figure out how to implement this (efficiently) in C.
 
-The finished syntax tree is one of the most important artifacts of the compilation process.
-After it is annotated with additional information (types, consant values, ...) it fully represents the program and its structure, and already allows some optimizations to take place.
+\subsection{Ambiguity}
+Ambiguity for CFGs is when you can derive a word with multiple different parse trees.
+We don't want ambiguity in our language, which can be achieved by left factoring, not part of the exam.
+Associativity of operators removes ambiguity, and for non-associative operators we need to prohibit chains of more than one operator.
+The dangling else is a classic ambiguity problem, and we need rules to take care of this (a classic solution is \emph{most closely nested}).
+There is also the term \emph{inessential ambiguity}, which is ambiguity that the semantics don't depend on.
+This kind of ambiguity can just be removed.
 
-The two main categories of parsing strategies are top-down and bottom-up.
+\subsection{Extended BNF (EBNF)}
+EBNF allows us to more comfortably express the things we want to express.
+They contain syntactic sugar like shown in \Cref{fig:ebnfstar}, which is equivalent to $term\ (addop\ term)^*$.
+They also contain optional constructs, expressed by brackets $\left[\ \right]$.
 
-\subsection{Top Down Parsing}
-Top-down parsing starts with the first symbol of a token stream and follows the steps of a leftmost derivation of the grammar.
-These parsers traverse the parse tree of the program in pre-order form from the root to the leaves.
-As the next choice of derivation can sometimes be ambiguous, multiple methods of disambiguation exist.
-One is using \emph{lookahead tokens}.
-By looking ahead in the token stream far enough to find a point where the rules become disambiguous, the parser can always find the correct derivation.
-This method causes some memory overhead, as the lookahead tokens have to be saved somewhere.
-
-The alternative is using \emph{backtracking}, and just deriving according to any possible rule, and backtracking if the choice was incorrect.
-This method potentially causes additional computation time due to the backtracking.
-This computational overhead makes them too slow to be used for practical parsers.
-
-\subsection{Bottom Up Parsing}
-If you read the previous chapter, you know that choosing the right derivation step is hard for top down parsing.
-This is the major strength of bottom-up parsers, because they can just take incoming tokens until a rule is fulfilled.
-They are named and differentiated by their derivation policy and and the number of lookahead tokens, but in general they all follow the same procedure.
-Their two main functions are \emph{shift}, which moves a token (or terminal) to the top of the stack, and \emph{reduce}, which replaces a string $\alpha$ on the stack with a nonterminal $A$ (according to a rule $A \rightarrow \alpha$).
+\fig{h}{0.7}{ebnfstar}{EBNF form for star notation}
 
 \section{Attribute Grammars \& Semantic Analysis}
 Attribute grammars are an extension to context free grammars.
