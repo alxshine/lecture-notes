@@ -363,7 +363,7 @@ The scope tells us in which context it is legal to use a variable, and this is u
 If a variable is referenced it is first searched in the symbol table of the samllest surrounding scope, and this search is then gradually exetended outward, until the variable is either found, or until it is declared nonexistant (the bahaviour in this case depends on the language).
 
 The lifetime of a variable tells us how long the memory for it has to be allocated, and when it can be freed.
-This is not very important for variables that live on the stack, as that memory is freed automatically as the program leaves the function the stack frame belonged to, but for heap variables this is something that has to be kept in mind.
+This is not very important for variables that live on \emph{The Stack}, as that memory is freed automatically as the program leaves the function \emph{The Stack} frame belonged to, but for heap variables this is something that has to be kept in mind.
 The memory of stack variables needs to be freed as long as that variable is no longer valid.
 This is handled differently in different languages.
 Some have a garbage collector (e.g. Java), while others require the user to do this or face the consequences of memory leaks.
@@ -556,6 +556,32 @@ More high level IRs also usually contain constructs that are a bit more tricky t
 For this you convert the AST into a logical control flow tree, which is physically implemented using node sharing.
 This makes the representation conservative on memory, but slightly trickier to implement.
 But you should be fine, you have are in the Master's Programme after all ;)
+
+\subsection{Call Graphs and \emph{The Stack}}
+We all know how to call a function (I hope).
+But some of us may not know what needs to be done when a function is called.
+We need to allocate space somewhere to store parameters and return values (that are not stored directly in registers), store a return address, and then jump to the actual function.
+
+To represent the calling relationship between functions we use a call graph.
+The call graph is simply a graph that shows which functions call which other functions.
+It can be either static (determined at compile time), or dynamic (generated at runtime and always a tree).
+Call graphs can also have varying degrees of context sensitivity (accounting for calling context or not).
+\Cref{fig:calling} shows a nice visualization of a call graph.
+
+\fig{h}{0.9}{calling}{A context sensitive and a context insensitive call graph}
+
+In order to manage function calls we need \emph{The Stack}.
+\emph{The Stack} stores information that cannot (for various reasons) be stored in registers.
+Maybe the information is too large, maybe we need \emph{The Stack} in order to do some magic, it doesn't matter.
+\emph{The Stack} is there for us.
+
+It starts at some point in memory and grows downwards (towards lower addresses).
+All we need to interact with \emph{The Stack} are two pointers: a stack pointer and a frame pointer.
+The first points to the current \emph{end} of \emph{The Stack}, while the latter points to the beginning of the current stack frame (the end of \emph{The Stack} after this function call ends).
+When a new function call is entered, the old frame pointer is stored (so we can restore the state), the old stack pointer is stored in the frame pointer, and \emph{The Stack} is extended downwards (according to the memory we need), while updating our stack pointer accordingly.
+\Cref{fig:stack} shows a graphical representation of \emph{The Stack}.
+
+\fig{h}{0.4}{thestack}{\emph{The Stack}}
 
 \section{Optimization Theory}
 Optimization is probably the most complex phase of the compiler, and the one with the most ongoing research.
@@ -1021,10 +1047,10 @@ We start with an important observation:
 
 We then get a very simple algorithm:
 \begin{enumerate}
-	\item Pick any node $|n| < k$ and put it on the stack
+	\item Pick any node $|n| < k$ and put it on \emph{The Stack}
 	\item Remove that node and its edges, reducing the degree of neighbors
 	\item If there are no nodes $|n| < k$, spill any node and continue
-	\item After all nodes are on the stack, pop them and color them one by one (considering neighbor's colors)
+	\item After all nodes are on \emph{The Stack}, pop them and color them one by one (considering neighbor's colors)
 \end{enumerate}
 
 \Cref{fig:coloring} shows an example of a colored interference graph.
